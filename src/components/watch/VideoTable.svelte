@@ -12,7 +12,7 @@
 			class="flex flex-1 w-full h-10 px-3 py-2 text-sm border rounded-md border-input bg-background ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 ring-orange-400"
 			placeholder="Search videos..."
 			type="search"
-			on:change={(e) => onSearch((e.target as HTMLInputElement).value || '')}
+			on:change={(e) => onSearch(e.target.value || '')}
 		/>
 	</div>
 	<div class="relative w-full overflow-auto">

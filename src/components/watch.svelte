@@ -99,8 +99,8 @@
 	{:else}
 		<VideoTable
 			data={$dataStore}
-			onclick={(str: string) => reset(str)}
-			onSearch={(str: string) => (searchText = str)}
+			onclick={(str) => reset(str)}
+			onSearch={(str) => (searchText = str)}
 		/>
 	{/if}
 </div>

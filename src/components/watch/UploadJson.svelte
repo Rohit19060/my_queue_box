@@ -93,7 +93,7 @@
 		<div class="loader"></div>
 	{:else}
 		<Button
-			onclick={() => document.getElementById('fileInput')!.click()}
+			onclick={() => document.getElementById('fileInput').click()}
 			label="Upload JSON File"
 		/>
 		<!-- Hidden file input -->
