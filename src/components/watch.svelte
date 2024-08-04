@@ -8,8 +8,8 @@
 		hasMore,
 		isLoading
 	} from '../stores/videoDB';
-	import UploadJson from './watch/UploadJson.svelte';
-	import VideoTable from './watch/VideoTable.svelte';
+	import UploadJson from './watch/upload_json.svelte';
+	import VideoTable from './watch/video_table.svelte';
 
 	let observer: IntersectionObserver;
 	let sortOptions = ['titleIndex', 'durationIndex', 'channelIndex', 'publishedAtIndex'];
