@@ -1,6 +1,6 @@
 // global.d.ts
 declare global {
-	interface VideoIndexDB{
+	interface VideoIndexDB {
 		id: string;
 		title: string;
 		description: string;
@@ -28,13 +28,16 @@ declare global {
 			contentDetails: {
 				duration: string;
 			},
-			 
+
 			statistics: {
 				viewCount: string;
 				likeCount: string;
 			},
 		},
 	}
+
+
+
 }
 
 export { }; // Ensure this file is a module

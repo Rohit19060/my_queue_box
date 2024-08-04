@@ -1,5 +1,4 @@
 <script lang="ts">
-	import { dateToHumanReadable, secondsToHumanReadable } from '$lib';
 	import { onMount } from 'svelte';
 	import { get } from 'svelte/store';
 	import {
@@ -7,24 +6,28 @@
 		dataStore,
 		fetchPaginatedData,
 		hasMore,
-		isLoading,
-		ITEMS_PER_PAGE,
-		totalCount
-	} from '../stores/dataStore';
-	import UploadJson from './upload_json.svelte';
+		isLoading
+	} from '../stores/videoDB';
+	import UploadJson from './watch/UploadJson.svelte';
+	import VideoTable from './watch/VideoTable.svelte';
 
 	let observer: IntersectionObserver;
 	let sortOptions = ['titleIndex', 'durationIndex', 'channelIndex', 'publishedAtIndex'];
 	let sortBy = sortOptions[0];
-
+	let isDesc = false;
 	let dataLoaded = true;
+	let searchText = '';
 
 	async function loadMoreItems() {
 		if (get(isLoading) || !get(hasMore)) return;
 		$isLoading = true;
 		try {
 			const cursorValue = get(currentCursorValue);
-			const { data: newItems, nextCursorValue } = await fetchPaginatedData(cursorValue, sortBy);
+			const { data: newItems, nextCursorValue } = await fetchPaginatedData(
+				cursorValue,
+				sortBy,
+				isDesc
+			);
 			if (newItems.length === 0 || nextCursorValue === null) {
 				hasMore.set(false); // No more items to load
 			}
@@ -59,7 +62,7 @@
 
 		// Set up event listener for data changes
 		const dataChangeListener = () => {
-			reset();
+			reset(sortBy);
 			loadMoreItems();
 		};
 
@@ -72,81 +75,33 @@
 		};
 	});
 
-	function reset() {
+	function reset(sortText: string) {
+		if (sortText == sortBy) {
+			isDesc = !isDesc;
+		} else {
+			sortBy = sortText;
+			isDesc = false;
+		}
 		dataStore.update(() => []);
 		currentCursorValue.set(null);
 		hasMore.set(true);
 	}
 </script>
 
-<div class="text-center">
-	<h1 class="text-3xl">Watch Later</h1>
+<div class="flex justify-between my-4">
+	<div class="flex-1"></div>
+	<h1 class="flex-1 text-2xl grow">Watch Later</h1>
+	<div class="mr-3"><UploadJson /></div>
 </div>
 <div>
-	<UploadJson />
-
 	{#if dataLoaded}
 		<div class="loader"></div>
 	{:else}
-		<!-- Total -->
-		<div class="flex items-center justify-center gap-4 px-4 py-10 font-bold rounded-2xl">
-			<h4>Total</h4>
-			<span>{$dataStore.length}/{$totalCount}</span>
-			<span>{ITEMS_PER_PAGE} items per page</span>
-		</div>
-		<select class="select-none" on:change={() => reset()} bind:value={sortBy}>
-			<option value="titleIndex">Title</option>
-			<option value="durationIndex">Duration</option>
-			<option value="channelIndex">Channel</option>
-			<option value="publishedAtIndex">Published At</option>
-		</select>
-		<table class="w-full table-auto">
-			<thead>
-				<tr>
-					<th>No.</th>
-					<th>Title</th>
-					<th>Duration</th>
-					<th>Channel</th>
-					<th>Published At</th>
-				</tr>
-			</thead>
-			<tbody>
-				{#each $dataStore as item, i}
-					<tr>
-						<td>{i + 1}</td>
-						<td>
-							<a
-								href={`https://www.youtube.com/watch?v=${item.id}`}
-								target="_blank"
-								rel="noopener noreferrer"
-								class="flex items-center justify-center flex-grow gap-4 px-4 py-10 font-bold rounded-2xl"
-							>
-								<div>
-									<h4>{item.title}</h4>
-									<span>{dateToHumanReadable(item.publishedAt)}</span>
-								</div>
-							</a>
-						</td>
-						<td>{secondsToHumanReadable(item.durationSec)}s</td>
-
-						<td>
-							<a
-								href={`https://www.youtube.com/channel/${item.channelId}`}
-								rel="noopener noreferrer"
-								target="_blank"
-							>
-								{item.id}</a
-							>
-						</td>
-						<td>{dateToHumanReadable(item.publishedAt)}</td>
-					</tr>
-				{:else}
-					<tr>
-						<td colspan="5">No Videos found</td>
-					</tr>
-				{/each}
-			</tbody>
-		</table>
+		<VideoTable
+			data={$dataStore}
+			onclick={(str: string) => reset(str)}
+			onSearch={(str: string) => (searchText = str)}
+		/>
 	{/if}
 </div>
 <div id="load-more-trigger"></div>

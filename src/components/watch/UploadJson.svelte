@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { convertToVideoIndexDB } from '$lib';
-	import { DB_NAME, DB_VERSION, dbUpgrade } from '../stores/dataStore';
+	import { DB_NAME, DB_VERSION, dbUpgrade } from '../../stores/videoDB';
+	import Button from '../home/Button.svelte';
 
 	// Define the structure of the data to be stored
 
@@ -63,8 +64,8 @@
 	// Function to store data in IndexedDB
 	async function storeDataInIndexedDB(data: VideoResponse[]): Promise<void> {
 		return new Promise((resolve, reject) => {
-			    const request = indexedDB.open(DB_NAME, DB_VERSION);
-        request.onupgradeneeded = dbUpgrade;
+			const request = indexedDB.open(DB_NAME, DB_VERSION);
+			request.onupgradeneeded = dbUpgrade;
 
 			request.onsuccess = (event: Event) => {
 				const db = (event.target as IDBOpenDBRequest).result;
@@ -77,7 +78,6 @@
 				});
 
 				transaction.oncomplete = () => {
-					
 					resolve();
 				};
 				transaction.onerror = (event: Event) => reject((event.target as IDBRequest).error);
@@ -92,43 +92,18 @@
 	{#if isLoading}
 		<div class="loader"></div>
 	{:else}
-		<!-- Custom label that triggers the file input -->
-		<label for="fileInput" class="custom-file-label no-select">Upload JSON File</label>
+		<Button
+			onclick={() => document.getElementById('fileInput')!.click()}
+			label="Upload JSON File"
+		/>
 		<!-- Hidden file input -->
 		<input
 			id="fileInput"
 			type="file"
 			accept=".json"
-			class="hidden-input"
+			class="hidden"
 			on:change={handleFileUpload}
 			multiple
 		/>
 	{/if}
 </div>
-
-<style>/* Apply to the entire document or specific elements */
-.no-select {
-  user-select: none; /* Standard syntax */
-  -webkit-user-select: none; /* Chrome, Safari, and Opera */
-  -moz-user-select: none; /* Firefox */
-  -ms-user-select: none; /* Internet Explorer/Edge */
-}
-	.hidden-input {
-		display: none;
-	}
-
-	.custom-file-label {
-		display: inline-block;
-		padding: 0.5em 1em;
-		background-color: #007bff;
-		color: white;
-		border-radius: 4px;
-		cursor: pointer;
-	}
-
-	.custom-file-label:hover {
-		background-color: #0056b3;
-	}
-
-
-</style>

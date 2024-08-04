@@ -1,6 +1,4 @@
-// place files you want to import through the `$lib` alias in this folder.
-
-// Date to human readable
+import { currentCursorValue, dataStore, hasMore, page } from "../stores/videoDB";
 
 function dateToHumanReadable(date: Date): string {
 	return date.toLocaleDateString('en-US', {
@@ -57,6 +55,23 @@ function convertToVideoIndexDB(videoResponse: VideoResponse): VideoIndexDB {
 	};
 }
 
+enum CurrentPage {
+	Home = 0,
+	Read = 1,
+	Watch = 2,
+	Settings = 3,
+	About = 4,
+	Contact = 5,
+	Login = 6,
+	Register = 7,
+	Logout = 8,
+}
+export function setSpaPage(x: CurrentPage) {
+	dataStore.update(() => []);
+	currentCursorValue.set(null);
+	hasMore.set(true);
+	page.set(x);
+}
 
-export { convertToVideoIndexDB, dateToHumanReadable, isoDurationToSeconds, secondsToHumanReadable };
+export { convertToVideoIndexDB, CurrentPage, dateToHumanReadable, isoDurationToSeconds, secondsToHumanReadable };
 
