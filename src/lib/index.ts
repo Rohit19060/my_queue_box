@@ -1,4 +1,4 @@
-import { currentCursorValue, dataStore, hasMore, page } from "../stores/videoDB";
+import { currentCursorValue, dataStore, hasMore, page } from "./stores/videoDB";
 
 function dateToHumanReadable(date: Date): string {
 	return date.toLocaleDateString('en-US', {

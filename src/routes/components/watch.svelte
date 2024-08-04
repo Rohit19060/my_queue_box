@@ -1,13 +1,13 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
-	import { get } from 'svelte/store';
 	import {
 		currentCursorValue,
 		dataStore,
 		fetchPaginatedData,
 		hasMore,
 		isLoading
-	} from '../stores/videoDB';
+	} from '$lib/stores/videoDB';
+	import { onMount } from 'svelte';
+	import { get } from 'svelte/store';
 	import UploadJson from './watch/upload_json.svelte';
 	import VideoTable from './watch/video_table.svelte';
 

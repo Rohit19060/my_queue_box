@@ -1,9 +1,9 @@
 <script>
 	import { CurrentPage } from '$lib';
-	import Home from '../components/home.svelte';
-	import Read from '../components/read.svelte';
-	import Watch from '../components/watch.svelte';
-	import { page } from '../stores/videoDB';
+	import { page } from '../lib/stores/videoDB';
+	import Home from './components/home.svelte';
+	import Read from './components/read.svelte';
+	import Watch from './components/watch.svelte';
 </script>
 
 {#if $page == CurrentPage.Home}

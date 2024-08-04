@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { convertToVideoIndexDB } from '$lib';
-	import { DB_NAME, DB_VERSION, dbUpgrade } from '../../stores/videoDB';
+	import { DB_NAME, DB_VERSION, dbUpgrade } from '$lib/stores/videoDB';
 	import Button from '../home/Button.svelte';
 
 	// Define the structure of the data to be stored

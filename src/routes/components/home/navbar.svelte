@@ -1,6 +1,6 @@
 <script>
 	import { CurrentPage, setSpaPage } from '$lib';
-	import { page } from '../../../stores/videoDB';
+	import { page } from '../../../lib/stores/videoDB';
 </script>
 
 <header
