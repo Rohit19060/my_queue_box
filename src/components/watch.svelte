@@ -1,66 +1,82 @@
 <script lang="ts">
+	import { dateToHumanReadable, secondsToHumanReadable } from '$lib';
 	import { onMount } from 'svelte';
-	import { writable } from 'svelte/store';
+	import { get } from 'svelte/store';
+	import {
+		currentCursorValue,
+		dataStore,
+		fetchPaginatedData,
+		hasMore,
+		isLoading,
+		ITEMS_PER_PAGE,
+		totalCount
+	} from '../stores/dataStore';
 	import UploadJson from './upload_json.svelte';
-	// Define the store
-	const dataStore = writable<VideoIndexDB[]>([]);
-	let isLoading = false;
-	const ITEMS_PER_PAGE = 100;
 
-	async function fetchDataFromIndexedDB() {
-		return new Promise<VideoIndexDB[]>((resolve, reject) => {
-			const request = indexedDB.open('MyWatchDatabase', 3);
+	let observer: IntersectionObserver;
+	let sortOptions = ['titleIndex', 'durationIndex', 'channelIndex', 'publishedAtIndex'];
+	let sortBy = sortOptions[0];
 
-			request.onupgradeneeded = (event: IDBVersionChangeEvent) => {
-				const db = (event.target as IDBOpenDBRequest).result;
-				if (!db.objectStoreNames.contains('videoStore')) {
-					db.createObjectStore('videoStore', { keyPath: 'id' });
-				}
-			};
+	let dataLoaded = true;
 
-			request.onsuccess = (event: Event) => {
-				const db = (event.target as IDBOpenDBRequest).result;
-				const transaction = db.transaction('videoStore', 'readonly');
-				const objectStore = transaction.objectStore('videoStore');
-				const request = objectStore.getAll();
-				request.onsuccess = () => resolve(request.result);
-				request.onerror = (event: Event) => reject((event.target as IDBRequest).error);
-			};
-
-			request.onerror = (event: Event) => reject((event.target as IDBRequest).error);
-		});
-	}
-
-	// Function to update the store with data from IndexedDB
-	async function updateStore() {
+	async function loadMoreItems() {
+		if (get(isLoading) || !get(hasMore)) return;
+		$isLoading = true;
 		try {
-			if (!indexedDB) {
-				console.error('IndexedDB is not supported in this browser.');
-				return;
+			const cursorValue = get(currentCursorValue);
+			const { data: newItems, nextCursorValue } = await fetchPaginatedData(cursorValue, sortBy);
+			if (newItems.length === 0 || nextCursorValue === null) {
+				hasMore.set(false); // No more items to load
 			}
-			isLoading = true;
-			const data = await fetchDataFromIndexedDB();
-			dataStore.set(data);
-			isLoading = false;
+			dataStore.update((items) => [...items, ...newItems]);
+			currentCursorValue.set(nextCursorValue);
 		} catch (error) {
-			console.error('Failed to fetch data:', error);
+			console.error('Failed to load more items:', error);
+		} finally {
+			$isLoading = false;
+			dataLoaded = false;
 		}
 	}
 
+	function setupObserver() {
+		if (observer) observer.disconnect();
+		observer = new IntersectionObserver(
+			([entry]) => {
+				if (entry.isIntersecting) {
+					loadMoreItems();
+				}
+			},
+			{ rootMargin: '100px' }
+		);
+
+		const target = document.querySelector('#load-more-trigger');
+		if (target) observer.observe(target);
+	}
+
 	onMount(() => {
-		// Load initial data
-		updateStore();
+		loadMoreItems(); // Initial load
+		setupObserver();
 
 		// Set up event listener for data changes
-		const dataChangeListener = () => updateStore();
+		const dataChangeListener = () => {
+			reset();
+			loadMoreItems();
+		};
 
 		window.addEventListener('data-changed', dataChangeListener);
 
 		// Clean up event listener on component unmount
 		return () => {
+			if (observer) observer.disconnect();
 			window.removeEventListener('data-changed', dataChangeListener);
 		};
 	});
+
+	function reset() {
+		dataStore.update(() => []);
+		currentCursorValue.set(null);
+		hasMore.set(true);
+	}
 </script>
 
 <div class="text-center">
@@ -69,33 +85,68 @@
 <div>
 	<UploadJson />
 
-	<br/>
-	{#if isLoading}
+	{#if dataLoaded}
 		<div class="loader"></div>
 	{:else}
-	<!-- Total -->
-	<div class="flex items-center justify-center gap-4 px-4 py-10 font-bold rounded-2xl">
-		<h4>Total</h4>
-		<span>{$dataStore.length}</span>
-	</div>
-	{#each $dataStore as item, i}
-		<div class="flex items-center w-6/12 gap-5 mx-auto">
-			<img src={`https://i.ytimg.com/vi/${item.id}/mqdefault.jpg`} alt={item.title} width="200px" />
-			<a
-				href={`https://www.youtube.com/watch?v=${item.id}`}
-				target="_blank"
-				rel="noopener noreferrer"
-				class="flex items-center justify-center flex-grow gap-4 px-4 py-10 font-bold rounded-2xl"
-			>
-				<div>
-					<h4>{item.title}</h4>
-					<span>{item.duration}</span>
-				</div>
-			</a>
-			<a href={`https://www.youtube.com/channel/${item.channelId}`} rel="noopener noreferrer" target="_blank"> {item.channelTitle}</a>
+		<!-- Total -->
+		<div class="flex items-center justify-center gap-4 px-4 py-10 font-bold rounded-2xl">
+			<h4>Total</h4>
+			<span>{$dataStore.length}/{$totalCount}</span>
+			<span>{ITEMS_PER_PAGE} items per page</span>
 		</div>
-	{:else}
-		<p>No Videos found</p>
-	{/each}
+		<select class="select-none" on:change={() => reset()} bind:value={sortBy}>
+			<option value="titleIndex">Title</option>
+			<option value="durationIndex">Duration</option>
+			<option value="channelIndex">Channel</option>
+			<option value="publishedAtIndex">Published At</option>
+		</select>
+		<table class="w-full table-auto">
+			<thead>
+				<tr>
+					<th>No.</th>
+					<th>Title</th>
+					<th>Duration</th>
+					<th>Channel</th>
+					<th>Published At</th>
+				</tr>
+			</thead>
+			<tbody>
+				{#each $dataStore as item, i}
+					<tr>
+						<td>{i + 1}</td>
+						<td>
+							<a
+								href={`https://www.youtube.com/watch?v=${item.id}`}
+								target="_blank"
+								rel="noopener noreferrer"
+								class="flex items-center justify-center flex-grow gap-4 px-4 py-10 font-bold rounded-2xl"
+							>
+								<div>
+									<h4>{item.title}</h4>
+									<span>{dateToHumanReadable(item.publishedAt)}</span>
+								</div>
+							</a>
+						</td>
+						<td>{secondsToHumanReadable(item.durationSec)}s</td>
+
+						<td>
+							<a
+								href={`https://www.youtube.com/channel/${item.channelId}`}
+								rel="noopener noreferrer"
+								target="_blank"
+							>
+								{item.id}</a
+							>
+						</td>
+						<td>{dateToHumanReadable(item.publishedAt)}</td>
+					</tr>
+				{:else}
+					<tr>
+						<td colspan="5">No Videos found</td>
+					</tr>
+				{/each}
+			</tbody>
+		</table>
 	{/if}
 </div>
+<div id="load-more-trigger"></div>

@@ -2,7 +2,7 @@
 	import Read from '../components/read.svelte';
 	import Watch from './../components/watch.svelte';
 
-	let currentPage = -1;
+	let currentPage = 1;
 </script>
 
 <div class="">

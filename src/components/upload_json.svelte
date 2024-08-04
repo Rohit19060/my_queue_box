@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { convertToVideoIndexDB } from '$lib';
+	import { DB_NAME, DB_VERSION, dbUpgrade } from '../stores/dataStore';
 
 	// Define the structure of the data to be stored
 
@@ -13,8 +14,6 @@
 		if (!input.files || input.files.length === 0) return;
 
 		files = Array.from(input.files);
-
-		isLoading = true;
 
 		isLoading = true;
 
@@ -41,7 +40,6 @@
 								...item,
 								id: item.details.id // or use a UUID generator
 							}));
-
 							await storeDataInIndexedDB(validData);
 							resolve(); // Resolve when data is successfully stored
 						} catch (error) {
@@ -56,6 +54,7 @@
 		// Wait for all file promises to complete
 		try {
 			await Promise.all(filePromises);
+			window.dispatchEvent(new Event('data-changed'));
 		} finally {
 			isLoading = false; // Ensure loader is hidden after processing
 		}
@@ -64,14 +63,8 @@
 	// Function to store data in IndexedDB
 	async function storeDataInIndexedDB(data: VideoResponse[]): Promise<void> {
 		return new Promise((resolve, reject) => {
-			const request = indexedDB.open('MyWatchDatabase', 3);
-
-			request.onupgradeneeded = (event: IDBVersionChangeEvent) => {
-				const db = (event.target as IDBOpenDBRequest).result;
-				if (!db.objectStoreNames.contains('videoStore')) {
-					db.createObjectStore('videoStore', { keyPath: 'id' });
-				}
-			};
+			    const request = indexedDB.open(DB_NAME, DB_VERSION);
+        request.onupgradeneeded = dbUpgrade;
 
 			request.onsuccess = (event: Event) => {
 				const db = (event.target as IDBOpenDBRequest).result;
@@ -84,7 +77,7 @@
 				});
 
 				transaction.oncomplete = () => {
-					window.dispatchEvent(new Event('data-changed'));
+					
 					resolve();
 				};
 				transaction.onerror = (event: Event) => reject((event.target as IDBRequest).error);

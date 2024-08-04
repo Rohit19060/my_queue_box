@@ -4,15 +4,17 @@ declare global {
 		id: string;
 		title: string;
 		description: string;
-		duration: string;
+		durationSec: number;
 		channelTitle: string;
 		channelId: string;
 		viewCount: string;
 		likeCount: string;
 		tags: string[];
+		publishedAt: DateTime;
 	}
 	interface VideoResponse {
 		id: string;
+		published_at: string;
 		details: {
 			id: string;
 			snippet: {
