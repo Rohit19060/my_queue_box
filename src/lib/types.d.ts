@@ -5,14 +5,15 @@ declare global {
 		title: string;
 		description: string;
 		durationSec: number;
+		durationSecStr: string;
 		channelTitle: string;
 		channelId: string;
-		viewCount: string;
-		likeCount: string;
+		categoryId: string;
 		tags: string[];
 		publishedAt: DateTime;
+		publishedAtStr: string;
 	}
-	interface VideoResponse {
+	interface VideoJsonResponse {
 		id: string;
 		published_at: string;
 		details: {
@@ -28,15 +29,20 @@ declare global {
 			contentDetails: {
 				duration: string;
 			},
-
-			statistics: {
-				viewCount: string;
-				likeCount: string;
-			},
 		},
 	}
 
-
+	interface YouTubeVideo {
+		id: string;
+		title: string;
+		description: string;
+		duration: string;
+		channelTitle: string;
+		channelId: string;
+		categoryId: string;
+		tags: string[];
+		publishedAt: string;
+	}
 
 }
 

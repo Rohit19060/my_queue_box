@@ -1,95 +1,139 @@
 <script lang="ts">
-	import { dateToHumanReadable, secondsToHumanReadable } from '$lib';
+	import { secondsToHumanReadable, timeAgo } from '$lib';
+	import Button from '../home/Button.svelte';
 
 	export let data: VideoIndexDB[] = [];
-	export let onclick = (str: string) => console.log(str);
+	export let onSort = (str: string) => console.log(str);
 	export let onSearch = (str: string) => console.log(str);
+	export let onRemove = (str: string) => console.log(str);
+
+	function toggleDropdown() {
+		const dropdownMenu = document.getElementById('dropdownMenu');
+		if (dropdownMenu) {
+			dropdownMenu.classList.toggle('hidden');
+		}
+	}
 </script>
 
-<div class="overflow-hidden rounded-lg">
-	<div class="flex items-center gap-4 p-4 bg-background">
-		<input
-			class="flex flex-1 w-full h-10 px-3 py-2 text-sm border rounded-md border-input bg-background ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 ring-orange-400"
-			placeholder="Search videos..."
-			type="search"
-			on:change={(e) => onSearch(e.target.value || '')}
-		/>
-	</div>
-	<div class="relative w-full overflow-auto">
-		<table class="w-full text-sm caption-bottom">
-			<thead class="[&amp;_tr]:border-b">
-				<tr class="border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted">
-					<th
-						class="h-12 px-4 text-left align-middle font-medium text-muted-foreground [&amp;:has([role=checkbox])]:pr-0 w-[80px]"
+<div class="flex flex-col gap-6 p-6 md:p-10">
+	<div class="flex flex-col items-start gap-4 md:flex-row md:items-center">
+		<div class="flex-1">
+			<input
+				class="w-full h-10 px-3 py-2 text-sm border rounded-md border-input bg-background ring-offset-backgroundplaceholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 ring-orange-400"
+				placeholder="Search videos..."
+				type="search"
+				on:input={(e) => onSearch(e.target.value || '')}
+			/>
+		</div>
+		<div class="flex items-center gap-4">
+			<!-- Example of a more customized dropdown with additional options -->
+			<div class="relative inline-block text-left">
+				<button
+					id="dropdownButton"
+					on:click={toggleDropdown}
+					class="inline-flex justify-center w-full px-4 py-2 text-sm font-medium text-white bg-orange-400 rounded-md hover:bg-orange-400 focus:outline-none"
+				>
+					Sort By
+					<svg
+						class="w-5 h-5 ml-2 -mr-1"
+						xmlns="http://www.w3.org/2000/svg"
+						viewBox="0 0 20 20"
+						fill="currentColor"
+						aria-hidden="true"
 					>
-						<span class="sr-only">Thumbnail</span>
-					</th>
-					<th
-						class="h-12 px-4 text-left align-middle font-medium text-muted-foreground [&amp;:has([role=checkbox])]:pr-0 cursor-pointer"
-						on:click={() => onclick('titleIndex')}
-					>
-						Title
-					</th>
-					<th
-						class="h-12 px-4 text-left align-middle font-medium text-muted-foreground [&amp;:has([role=checkbox])]:pr-0 cursor-pointer"
-						on:click={() => onclick('durationIndex')}
-					>
-						Duration
-					</th>
-					<th
-						class="h-12 px-4 text-left align-middle font-medium text-muted-foreground [&amp;:has([role=checkbox])]:pr-0 cursor-pointer"
-						on:click={() => onclick('channelIndex')}
-					>
-						Channel
-					</th>
-					<th
-						class="h-12 px-4 text-left align-middle font-medium text-muted-foreground [&amp;:has([role=checkbox])]:pr-0 cursor-pointer"
-						on:click={() => onclick('publishedAtIndex')}
-					>
-						Published
-					</th>
-				</tr>
-			</thead>
-			<tbody class="[&amp;_tr:last-child]:border-0">
-				{#each data as item, i}
-					<tr
-						class="border-b transition-colors data-[state=selected]:bg-muted group cursor-pointer hover:bg-muted"
-					>
-						<td class="p-4 align-middle [&amp;:has([role=checkbox])]:pr-0">
-							<img
-								src="https://i.ytimg.com/vi/{item.id}/mqdefault.jpg"
-								alt={item.title}
-								width="133"
-								height="100"
-								class="object-cover rounded-md"
-								style="aspect-ratio: 133 / 100; object-fit: cover;"
-							/>
-						</td>
-						<td>
-							<a
-								href={`https://www.youtube.com/watch?v=${item.id}`}
-								target="_blank"
-								rel="noopener noreferrer"
-								class="flex-grow font-bold text-center rounded-2xl"
-							>
-								<h4>{item.title}</h4>
-							</a>
-						</td>
-						<td>{secondsToHumanReadable(item.durationSec)}s</td>
+						<path
+							fill-rule="evenodd"
+							d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 011.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
+							clip-rule="evenodd"
+						/>
+					</svg>
+				</button>
 
-						<td>
-							<a
-								href={`https://www.youtube.com/channel/${item.channelId}`}
-								rel="noopener noreferrer"
-								target="_blank"
+				<div
+					id="dropdownMenu"
+					class="absolute right-0 z-20 hidden w-32 mt-2 origin-top-right bg-white rounded-md shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none"
+				>
+					<div
+						class="py-1"
+						role="menu"
+						aria-orientation="vertical"
+						aria-labelledby="dropdownButton"
+					>
+						<div class="px-1 py-1 text-sm text-gray-700">
+							<button
+								type="button"
+								class="w-full px-4 py-2 text-sm text-left text-gray-700 hover:bg-gray-100 hover:text-gray-900"
+								on:click={() => onSort('titleIndex')}
 							>
-								{item.channelTitle}</a
+								Title
+							</button>
+							<button
+								type="button"
+								class="w-full px-4 py-2 text-sm text-left text-gray-700 hover:bg-gray-100 hover:text-gray-900"
+								on:click={() => onSort('durationIndex')}
 							>
-						</td>
-						<td>{dateToHumanReadable(item.publishedAt)}</td>
-					</tr>
-				{/each}
-			</tbody>
-		</table>
+								Duration
+							</button>
+							<button
+								type="button"
+								class="w-full px-4 py-2 text-sm text-left text-gray-700 hover:bg-gray-100 hover:text-gray-900"
+								on:click={() => onSort('channelIndex')}
+							>
+								Channel
+							</button>
+							<button
+								type="button"
+								class="w-full px-4 py-2 text-sm text-left text-gray-700 hover:bg-gray-100 hover:text-gray-900"
+								on:click={() => onSort('publishedAtIndex')}
+							>
+								Published
+							</button>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+	<!-- https://i.ytimg.com/vi/{item.id}/mqdefault.jpg -->
+	<div class="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+		{#each data as item, i}
+			<div class="flex flex-col justify-between bg-background rounded-xl group">
+				<a href="https://www.youtube.com/watch?v={item.id}">
+					<div class="relative">
+						<img
+							src="https://i.ytimg.com/vi/{item.id}/mqdefault.jpg"
+							alt={item.title}
+							class="relative flex-grow object-cover w-full transition-opacity rounded-xl aspect-video group-hover:opacity-80"
+						/>
+						<div
+							class="absolute px-2 py-1 text-sm text-white rounded-md bottom-2 left-2 bg-black/50"
+						>
+							{timeAgo(item.publishedAt)}
+						</div>
+						<div
+							class="absolute px-2 py-1 text-sm text-white rounded-md bottom-2 right-2 bg-black/50"
+						>
+							{secondsToHumanReadable(item.durationSec)}
+						</div>
+					</div>
+				</a>
+				<div class="flex flex-col mt-3">
+					<a href="https://www.youtube.com/watch?v={item.id}">
+						<h3 class="font-medium capitalize line-clamp-2 min-h-12">{item.title}</h3>
+					</a>
+					<div class="flex items-center justify-between mt-2">
+						<a
+							href={`https://www.youtube.com/channel/${item.channelId}`}
+							rel="noopener noreferrer"
+							target="_blank"
+							class="capitalize"
+						>
+							{item.channelTitle}</a
+						>
+						<Button label="Remove" onclick={() => onRemove(item.id)} className="bg-red-500" />
+					</div>
+				</div>
+			</div>
+		{/each}
 	</div>
 </div>

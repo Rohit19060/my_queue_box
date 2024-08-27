@@ -1,6 +1,5 @@
 <script lang="ts">
-	import { convertToVideoIndexDB } from '$lib';
-	import { DB_NAME, DB_VERSION, dbUpgrade } from '$lib/stores/videoDB';
+	import { storeDataInIndexedDB } from '$lib/stores/videoDB';
 	import Button from '../home/Button.svelte';
 
 	// Define the structure of the data to be stored
@@ -35,11 +34,13 @@
 								return;
 							}
 
-							const jsonData: VideoResponse[] = JSON.parse(event.target.result as string)['items'];
+							const jsonData: VideoJsonResponse[] = JSON.parse(event.target.result as string)[
+								'items'
+							];
 
 							const validData = jsonData.map((item) => ({
 								...item,
-								id: item.details.id // or use a UUID generator
+								id: item.details.id
 							}));
 							await storeDataInIndexedDB(validData);
 							resolve(); // Resolve when data is successfully stored
@@ -62,40 +63,13 @@
 	};
 
 	// Function to store data in IndexedDB
-	async function storeDataInIndexedDB(data: VideoResponse[]): Promise<void> {
-		return new Promise((resolve, reject) => {
-			const request = indexedDB.open(DB_NAME, DB_VERSION);
-			request.onupgradeneeded = dbUpgrade;
-
-			request.onsuccess = (event: Event) => {
-				const db = (event.target as IDBOpenDBRequest).result;
-				const transaction = db.transaction('videoStore', 'readwrite');
-				const objectStore = transaction.objectStore('videoStore');
-
-				data.forEach((item) => {
-					let convertedItem = convertToVideoIndexDB(item);
-					objectStore.put(convertedItem);
-				});
-
-				transaction.oncomplete = () => {
-					resolve();
-				};
-				transaction.onerror = (event: Event) => reject((event.target as IDBRequest).error);
-			};
-
-			request.onerror = (event: Event) => reject((event.target as IDBRequest).error);
-		});
-	}
 </script>
 
 <div>
 	{#if isLoading}
 		<div class="loader"></div>
 	{:else}
-		<Button
-			onclick={() => document.getElementById('fileInput').click()}
-			label="Upload JSON File"
-		/>
+		<Button onclick={() => document.getElementById('fileInput').click()} label="Upload JSON File" />
 		<!-- Hidden file input -->
 		<input
 			id="fileInput"

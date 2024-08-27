@@ -2,13 +2,18 @@
 	import {
 		currentCursorValue,
 		dataStore,
+		error,
 		fetchPaginatedData,
 		hasMore,
-		isLoading
+		removeVideoFromIndexDB,
+		searchDataStore,
+		searchVideos
 	} from '$lib/stores/videoDB';
 	import { onMount } from 'svelte';
 	import { get } from 'svelte/store';
+	import SearchVideo from './watch/search_video.svelte';
 	import UploadJson from './watch/upload_json.svelte';
+	import VideoDetails from './watch/video_details.svelte';
 	import VideoTable from './watch/video_table.svelte';
 
 	let observer: IntersectionObserver;
@@ -19,8 +24,7 @@
 	let searchText = '';
 
 	async function loadMoreItems() {
-		if (get(isLoading) || !get(hasMore)) return;
-		$isLoading = true;
+		if (!get(hasMore)) return;
 		try {
 			const cursorValue = get(currentCursorValue);
 			const { data: newItems, nextCursorValue } = await fetchPaginatedData(
@@ -29,14 +33,22 @@
 				isDesc
 			);
 			if (newItems.length === 0 || nextCursorValue === null) {
-				hasMore.set(false); // No more items to load
+				hasMore.set(false);
+			} else {
+				dataStore.update((items) => {
+					let newItemsCopy = [...items];
+					newItems.forEach((item) => {
+						if (newItemsCopy.findIndex((x) => x.id === item.id) === -1) {
+							newItemsCopy.push(item);
+						}
+					});
+					return newItemsCopy;
+				});
+				currentCursorValue.set(nextCursorValue);
 			}
-			dataStore.update((items) => [...items, ...newItems]);
-			currentCursorValue.set(nextCursorValue);
 		} catch (error) {
 			console.error('Failed to load more items:', error);
 		} finally {
-			$isLoading = false;
 			dataLoaded = false;
 		}
 	}
@@ -46,7 +58,11 @@
 		observer = new IntersectionObserver(
 			([entry]) => {
 				if (entry.isIntersecting) {
-					loadMoreItems();
+					if (searchText.length === 0) {
+						loadMoreItems();
+					} else {
+						searchVideo(searchText, true);
+					}
 				}
 			},
 			{ rootMargin: '100px' }
@@ -57,13 +73,11 @@
 	}
 
 	onMount(() => {
-		loadMoreItems(); // Initial load
 		setupObserver();
 
 		// Set up event listener for data changes
-		const dataChangeListener = () => {
-			reset(sortBy);
-			loadMoreItems();
+		const dataChangeListener = async () => {
+			await reset(sortBy);
 		};
 
 		window.addEventListener('data-changed', dataChangeListener);
@@ -75,7 +89,7 @@
 		};
 	});
 
-	function reset(sortText: string) {
+	async function reset(sortText: string) {
 		if (sortText == sortBy) {
 			isDesc = !isDesc;
 		} else {
@@ -85,23 +99,86 @@
 		dataStore.update(() => []);
 		currentCursorValue.set(null);
 		hasMore.set(true);
+		await loadMoreItems();
+	}
+
+	async function removeVideo(id: string) {
+		try {
+			await removeVideoFromIndexDB(id);
+		} catch (e) {
+			console.error('Error removing video from indexDB', e);
+			return;
+		} finally {
+			error.set(null);
+		}
+		dataStore.update(() => []);
+		currentCursorValue.set(null);
+		hasMore.set(true);
+	}
+
+	async function searchVideo(str: string, isScroll: boolean = false) {
+		searchText = str;
+		if (str.length === 0) {
+			reset(sortOptions[0]);
+			return;
+		}
+		try {
+			let cursorValue: IDBValidKey | null;
+			if (isScroll) {
+				cursorValue = get(currentCursorValue);
+			} else {
+				cursorValue = null;
+			}
+			const { data: newItems, nextCursorValue } = await searchVideos(
+				cursorValue,
+				sortBy,
+				isDesc,
+				str
+			);
+			if (isScroll) {
+				dataStore.update((x) => {
+					let newItemsCopy = [...x];
+					newItems.forEach((item) => {
+						if (newItemsCopy.findIndex((x) => x.id === item.id) === -1) {
+							newItemsCopy.push(item);
+						}
+					});
+					return newItemsCopy;
+				});
+			} else {
+				dataStore.update(() => newItems);
+			}
+			currentCursorValue.set(nextCursorValue);
+		} catch (e) {
+			console.error('Error searching videos', e);
+			return;
+		} finally {
+			error.set(null);
+		}
 	}
 </script>
 
-<div class="flex justify-between my-4">
-	<div class="flex-1"></div>
-	<h1 class="flex-1 text-2xl grow">Watch Later</h1>
-	<div class="mr-3"><UploadJson /></div>
+<div class="flex items-center justify-center gap-4 my-4">
+	<SearchVideo />
+	<UploadJson />
 </div>
-<div>
-	{#if dataLoaded}
-		<div class="loader"></div>
-	{:else}
-		<VideoTable
-			data={$dataStore}
-			onclick={(str) => reset(str)}
-			onSearch={(str) => (searchText = str)}
-		/>
-	{/if}
-</div>
+<VideoDetails />
+{#if dataLoaded}
+	<div class="loader"></div>
+{:else if $searchDataStore.length > 0}
+	<VideoTable
+		data={$searchDataStore}
+		onSort={(str) => reset(str)}
+		onSearch={(str) => searchVideo(str)}
+		onRemove={(str) => removeVideo(str)}
+	/>
+{:else}
+	<VideoTable
+		data={$dataStore}
+		onSort={(str) => reset(str)}
+		onSearch={(str) => searchVideo(str)}
+		onRemove={(str) => removeVideo(str)}
+	/>
+{/if}
+
 <div id="load-more-trigger"></div>

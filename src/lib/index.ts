@@ -1,6 +1,6 @@
 import { currentCursorValue, dataStore, hasMore, page } from "./stores/videoDB";
 
-function dateToHumanReadable(date: Date): string {
+export function dateToHumanReadable(date: Date): string {
 	return date.toLocaleDateString('en-US', {
 		year: 'numeric',
 		month: 'long',
@@ -8,7 +8,7 @@ function dateToHumanReadable(date: Date): string {
 	});
 }
 
-function secondsToHumanReadable(seconds: number): string {
+export function secondsToHumanReadable(seconds: number): string {
 	// Calculate hours, minutes, and seconds
 	const hours = Math.floor(seconds / 3600);
 	const minutes = Math.floor((seconds % 3600) / 60);
@@ -22,8 +22,34 @@ function secondsToHumanReadable(seconds: number): string {
 	return `${hoursStr}${minutesStr}${secondsStr}`;
 }
 
+export function timeAgo(date: Date): string {
+	const now = new Date();
+	const differenceInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
+	const minutes = Math.floor(differenceInSeconds / 60);
+	const hours = Math.floor(minutes / 60);
+	const days = Math.floor(hours / 24);
+	const weeks = Math.floor(days / 7);
+	const months = Math.floor(weeks / 4.35);
+	const years = Math.floor(months / 12);
+	if (years > 0) {
+		return years === 1 ? "1 year ago" : `${years} years ago`;
+	} else if (months > 0) {
+		return months === 1 ? "1 month ago" : `${months} months ago`;
+	} else if (weeks > 0) {
+		return weeks === 1 ? "1 week ago" : `${weeks} weeks ago`;
+	} else if (days > 0) {
+		return days === 1 ? "1 day ago" : `${days} days ago`;
+	} else if (hours > 0) {
+		return hours === 1 ? "1 hour ago" : `${hours} hours ago`;
+	} else if (minutes > 0) {
+		return minutes === 1 ? "1 minute ago" : `${minutes} minutes ago`;
+	} else {
+		return "Just now";
+	}
+}
 
-function isoDurationToSeconds(duration: string): number {
+
+export function isoDurationToSeconds(duration: string): number {
 	const regex = /^PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?$/;
 	const matches = regex.exec(duration);
 
@@ -38,24 +64,29 @@ function isoDurationToSeconds(duration: string): number {
 	return (hours * 3600) + (minutes * 60) + seconds;
 }
 
+function sanitizeStringKey(key: string): string {
+	let sanitizedKey = key.trim().toLowerCase();
+	sanitizedKey = sanitizedKey.replace(/[^\w\s]/gi, '');
+	return sanitizedKey.trim();
+}
 
-
-function convertToVideoIndexDB(videoResponse: VideoResponse): VideoIndexDB {
+export function convertToVideoIndexDB(videoResponse: VideoJsonResponse): VideoIndexDB {
 	return {
+		categoryId: videoResponse.details.snippet.categoryId,
 		id: videoResponse.id,
-		title: videoResponse.details.snippet.title,
+		title: sanitizeStringKey(videoResponse.details.snippet.title),
 		description: videoResponse.details.snippet.description,
 		durationSec: isoDurationToSeconds(videoResponse.details.contentDetails.duration),
+		durationSecStr: videoResponse.details.contentDetails.duration,
 		publishedAt: new Date(videoResponse.published_at),
+		publishedAtStr: videoResponse.published_at,
 		channelTitle: videoResponse.details.snippet.channelTitle,
 		channelId: videoResponse.details.snippet.channelId,
-		viewCount: videoResponse.details.statistics.viewCount,
-		likeCount: videoResponse.details.statistics.likeCount,
 		tags: videoResponse.details.snippet.tags,
 	};
 }
 
-enum CurrentPage {
+export enum CurrentPage {
 	Home = 0,
 	Read = 1,
 	Watch = 2,
@@ -66,12 +97,25 @@ enum CurrentPage {
 	Register = 7,
 	Logout = 8,
 }
+
 export function setSpaPage(x: CurrentPage) {
 	dataStore.update(() => []);
 	currentCursorValue.set(null);
 	hasMore.set(true);
 	page.set(x);
+	localStorage.setItem('spaPage', x.toString());
 }
 
-export { convertToVideoIndexDB, CurrentPage, dateToHumanReadable, isoDurationToSeconds, secondsToHumanReadable };
+export function urlToYouTubeId(urlOrId: string): string {
+	// Regular expression to match YouTube video IDs
+	const videoIdExp = /^(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/(?:[^\\n\s]+\/\S+\/|(?:v|e(?:mbed)?)\/|\S*?[?&]v=)|youtu\.be\/)([a-zA-Z0-9_-]{11})/i;
+
+	// Check if the input matches the video ID pattern
+	const match = urlOrId.match(videoIdExp);
+
+	// If there's a match, return the video ID, otherwise return the input as-is
+	return match ? match[1] : urlOrId;
+}
+
+
 
