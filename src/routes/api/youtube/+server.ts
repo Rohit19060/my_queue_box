@@ -14,9 +14,17 @@ export const GET: RequestHandler = async ({ url }) => {
         return json({ error: 'Failed to fetch video details' }, { status: 500 });
     }
     const data = await response.json();
-    const items = data.items;
-    if (items.length === 0) {
-        return json({ error: 'No video found' }, { status: 404 });
-    }
-    return json(items[0]);
+    const video: YouTubeVideoResponse = data.items[0];
+    const responseData: YouTubeVideo = {
+        id: video?.snippet.resourceId?.videoId ?? video.id,
+        title: video.snippet.title,
+        description: video.snippet.description,
+        duration: video.contentDetails.duration,
+        channelTitle: video.snippet.channelTitle,
+        channelId: video.snippet.channelId,
+        categoryId: video.snippet.categoryId,
+        tags: video.snippet.tags,
+        publishedAt: video.snippet.publishedAt,
+    };
+    return json(responseData);
 };

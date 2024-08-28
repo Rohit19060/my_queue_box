@@ -2,12 +2,14 @@
 	import {
 		currentCursorValue,
 		dataStore,
-		error,
 		fetchPaginatedData,
 		hasMore,
+		isDesc,
 		removeVideoFromIndexDB,
 		searchDataStore,
-		searchVideos
+		searchVideos,
+		sortBy,
+		SortOptions
 	} from '$lib/stores/videoDB';
 	import { onMount } from 'svelte';
 	import { get } from 'svelte/store';
@@ -17,9 +19,7 @@
 	import VideoTable from './watch/video_table.svelte';
 
 	let observer: IntersectionObserver;
-	let sortOptions = ['titleIndex', 'durationIndex', 'channelIndex', 'publishedAtIndex'];
-	let sortBy = sortOptions[0];
-	let isDesc = false;
+
 	let dataLoaded = true;
 	let searchText = '';
 
@@ -29,8 +29,8 @@
 			const cursorValue = get(currentCursorValue);
 			const { data: newItems, nextCursorValue } = await fetchPaginatedData(
 				cursorValue,
-				sortBy,
-				isDesc
+				$sortBy,
+				$isDesc
 			);
 			if (newItems.length === 0 || nextCursorValue === null) {
 				hasMore.set(false);
@@ -77,7 +77,7 @@
 
 		// Set up event listener for data changes
 		const dataChangeListener = async () => {
-			await reset(sortBy);
+			await reset($sortBy);
 		};
 
 		window.addEventListener('data-changed', dataChangeListener);
@@ -89,12 +89,12 @@
 		};
 	});
 
-	async function reset(sortText: string) {
-		if (sortText == sortBy) {
-			isDesc = !isDesc;
+	async function reset(sortText: SortOptions) {
+		if (sortText == $sortBy) {
+			$isDesc = !$isDesc;
 		} else {
-			sortBy = sortText;
-			isDesc = false;
+			$sortBy = sortText;
+			$isDesc = false;
 		}
 		dataStore.update(() => []);
 		currentCursorValue.set(null);
@@ -105,21 +105,17 @@
 	async function removeVideo(id: string) {
 		try {
 			await removeVideoFromIndexDB(id);
+			dataStore.update((x) => x.filter((x) => x.id !== id));
 		} catch (e) {
 			console.error('Error removing video from indexDB', e);
 			return;
-		} finally {
-			error.set(null);
 		}
-		dataStore.update(() => []);
-		currentCursorValue.set(null);
-		hasMore.set(true);
 	}
 
 	async function searchVideo(str: string, isScroll: boolean = false) {
 		searchText = str;
 		if (str.length === 0) {
-			reset(sortOptions[0]);
+			reset(SortOptions.Title);
 			return;
 		}
 		try {
@@ -131,8 +127,8 @@
 			}
 			const { data: newItems, nextCursorValue } = await searchVideos(
 				cursorValue,
-				sortBy,
-				isDesc,
+				$sortBy,
+				$isDesc,
 				str
 			);
 			if (isScroll) {
@@ -152,8 +148,6 @@
 		} catch (e) {
 			console.error('Error searching videos', e);
 			return;
-		} finally {
-			error.set(null);
 		}
 	}
 </script>

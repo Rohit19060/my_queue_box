@@ -5,12 +5,30 @@ const ITEMS_PER_PAGE = 40;
 const DB_VERSION = 1;
 const DB_NAME = 'kings-library';
 const DB_VIDEO_STORE = 'videoStore';
+
+export enum SortOptions {
+    Title = 'titleIndex',
+    Duration = 'durationIndex',
+    Channel = 'channelIndex',
+    PublishedAt = 'publishedAtIndex'
+}
+
+export const SortOptionDetails: { [key in SortOptions]: { keypath: string[] | string, str: string } } = {
+    [SortOptions.Title]: { keypath: 'title', str: 'Title' },
+    [SortOptions.Duration]: { keypath: ['durationSec', 'id'], str: 'Duration' },
+    [SortOptions.Channel]: { keypath: ['channelTitle', 'id'], str: 'Channel' },
+    [SortOptions.PublishedAt]: { keypath: ['publishedAtStr', 'id'], str: 'Published' }
+};
+
+// export const SORT_OPTIONS = ['titleIndex', 'durationIndex', 'channelIndex', 'publishedAtIndex'];
+export const sortBy = writable<SortOptions>(SortOptions.Title);
+export const isDesc = writable<boolean>(true);
 export const dataStore = writable<VideoIndexDB[]>([]);
 export const searchDataStore = writable<VideoIndexDB[]>([]);
 export const hasMore = writable(true);
 export const currentCursorValue = writable<IDBValidKey | null>(null);
 
-export const videoDetails = writable<VideoIndexDB | null>(null);
+export const videoDetails = writable<YouTubeVideo | null>(null);
 export const error = writable<string | null>(null);
 
 export const page = writable(typeof window !== 'undefined' ? parseInt(localStorage.getItem('spaPage') || '0') : 0);
@@ -31,44 +49,11 @@ function openDatabase(): Promise<IDBDatabase> {
                 upgradeInProgress = true;
                 if (!db.objectStoreNames.contains(DB_VIDEO_STORE)) {
                     const objectStore = db.createObjectStore(DB_VIDEO_STORE, { keyPath: 'id' }) as IDBObjectStore;
-                    objectStore.createIndex('titleIndex', 'title');
-                    objectStore.createIndex('durationIndex', ['durationSec', 'id']);
-                    objectStore.createIndex('channelIndex', ['channelTitle', 'id']);
-                    objectStore.createIndex('publishedAtIndex', ['publishedAtStr', 'id']);
+                    objectStore.createIndex(SortOptions.Title, SortOptionDetails[SortOptions.Title].keypath);
+                    objectStore.createIndex(SortOptions.Duration, SortOptionDetails[SortOptions.Duration].keypath);
+                    objectStore.createIndex(SortOptions.Channel, SortOptionDetails[SortOptions.Channel].keypath);
+                    objectStore.createIndex(SortOptions.PublishedAt, SortOptionDetails[SortOptions.PublishedAt].keypath);
                 }
-                const objectStore = db.transaction(DB_VIDEO_STORE, 'readwrite').objectStore(DB_VIDEO_STORE);
-                const request = objectStore.openCursor();
-                console.log("DB created");
-                request.onsuccess = (event: Event) => {
-                    const cursor = (event.target as IDBRequest<IDBCursorWithValue>).result;
-                    if (cursor) {
-                        const video = cursor.value as VideoIndexDB;
-
-                        if (!video.durationSecStr) {
-                            video.durationSecStr = video.durationSec.toString();
-                        }
-                        if (!video.publishedAtStr) {
-                            video.publishedAtStr = video.publishedAt.toString();
-                        }
-                        cursor.update(video);  // Save the modified record back
-                        cursor.continue();
-                    }
-                };
-
-                //  check of indexes exists
-                const indexNames = db.objectStoreNames;
-                if (indexNames.contains('durationIndex')) {
-                    const objectStore = db.createObjectStore(DB_VIDEO_STORE, { keyPath: 'id' }) as IDBObjectStore;
-                    objectStore.deleteIndex('durationIndex');
-                    objectStore.createIndex('durationIndex', ['durationSecStr', 'id'], { unique: true });
-                }
-
-                if (!indexNames.contains('publishedAtIndex')) {
-                    const objectStore = db.createObjectStore(DB_VIDEO_STORE, { keyPath: 'id' }) as IDBObjectStore;
-                    objectStore.deleteIndex('publishedAtIndex');
-                    objectStore.createIndex('publishedAtIndex', ['publishedAtStr', 'id'], { unique: true });
-                }
-                // Finish upgrade
                 upgradeInProgress = false;
             }
         };
@@ -122,7 +107,7 @@ export async function storeDataInIndexedDB(data: VideoJsonResponse[]): Promise<v
 }
 
 
-export async function fetchPaginatedData(cursorValue: IDBValidKey | null, sortBy: string = 'titleIndex', isDesc: boolean = false): Promise<{ data: VideoIndexDB[], nextCursorValue: IDBValidKey | null }> {
+export async function fetchPaginatedData(cursorValue: IDBValidKey | null, sortBy: string = 'titleIndex', isDesc: boolean = true): Promise<{ data: VideoIndexDB[], nextCursorValue: IDBValidKey | null }> {
     const db = await openDatabase();
     const transaction = db.transaction(DB_VIDEO_STORE, 'readonly');
     const objectStore = transaction.objectStore(DB_VIDEO_STORE);
@@ -133,13 +118,9 @@ export async function fetchPaginatedData(cursorValue: IDBValidKey | null, sortBy
     let counter = 0;
     let nextCursorValue: IDBValidKey | null = null;
 
-    console.log("Sort by: ", sortBy);
-    console.log("Cursor value: ", cursorValue);
-    console.log("Sort order: ", direction);
-
     return new Promise((resolve, reject) => {
-        const openRequest = cursorValue !== null
-            ? index.openCursor(IDBKeyRange.lowerBound(cursorValue, true), direction)
+        const openRequest = cursorValue != null
+            ? index.openCursor(direction == 'prev' ? IDBKeyRange.upperBound(cursorValue, true) : IDBKeyRange.lowerBound(cursorValue, true), direction)
             : index.openCursor(null, direction);
 
         openRequest.onsuccess = (event: Event) => {
@@ -165,12 +146,12 @@ export async function fetchPaginatedData(cursorValue: IDBValidKey | null, sortBy
 }
 
 
-export async function addVideoToIndexDB(video: VideoIndexDB) {
+export async function addVideoToIndexDB(video: YouTubeVideo) {
     const db = await openDatabase();
     const transaction = db.transaction(DB_VIDEO_STORE, 'readwrite');
     const objectStore = transaction.objectStore(DB_VIDEO_STORE);
     return new Promise((resolve, reject) => {
-        const request = objectStore.put(video);
+        const request = objectStore.put(convertToVideoIndexDB(video));
         request.onsuccess = () => resolve(video);
         request.onerror = (event: Event) => {
             reject((event.target as IDBRequest).error);
@@ -182,10 +163,8 @@ export async function removeVideoFromIndexDB(id: string) {
     const db = await openDatabase();
     const transaction = db.transaction(DB_VIDEO_STORE, 'readwrite');
     const objectStore = transaction.objectStore(DB_VIDEO_STORE);
-
     return new Promise((resolve, reject) => {
         const request = objectStore.delete(id);
-
         request.onsuccess = () => resolve({ "id": id, "success": true });
         request.onerror = (event: Event) => {
             reject((event.target as IDBRequest).error);

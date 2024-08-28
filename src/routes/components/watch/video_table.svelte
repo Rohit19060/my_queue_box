@@ -1,9 +1,12 @@
 <script lang="ts">
+	import AescDescArrow from './AescDescArrow.svelte';
+
 	import { secondsToHumanReadable, timeAgo } from '$lib';
+	import { isDesc, sortBy, SortOptionDetails, SortOptions } from '$lib/stores/videoDB';
 	import Button from '../home/Button.svelte';
 
 	export let data: VideoIndexDB[] = [];
-	export let onSort = (str: string) => console.log(str);
+	export let onSort = (str: SortOptions) => console.log(str);
 	export let onSearch = (str: string) => console.log(str);
 	export let onRemove = (str: string) => console.log(str);
 
@@ -13,16 +16,24 @@
 			dropdownMenu.classList.toggle('hidden');
 		}
 	}
+
+	function sortUpdated(sort: SortOptions) {
+		onSort(sort);
+		const dropdownMenu = document.getElementById('dropdownMenu');
+		if (dropdownMenu) {
+			dropdownMenu.classList.toggle('hidden');
+		}
+	}
 </script>
 
-<div class="flex flex-col gap-6 p-6 md:p-10">
+<div class="flex flex-col gap-6 md:px-8">
 	<div class="flex flex-col items-start gap-4 md:flex-row md:items-center">
 		<div class="flex-1">
 			<input
 				class="w-full h-10 px-3 py-2 text-sm border rounded-md border-input bg-background ring-offset-backgroundplaceholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 ring-orange-400"
 				placeholder="Search videos..."
 				type="search"
-				on:input={(e) => onSearch(e.target.value || '')}
+				on:input={(e) => onSearch(e.currentTarget.value || '')}
 			/>
 		</div>
 		<div class="flex items-center gap-4">
@@ -31,9 +42,10 @@
 				<button
 					id="dropdownButton"
 					on:click={toggleDropdown}
-					class="inline-flex justify-center w-full px-4 py-2 text-sm font-medium text-white bg-orange-400 rounded-md hover:bg-orange-400 focus:outline-none"
+					class="flex items-center justify-center w-full gap-2 px-4 py-2 text-sm font-medium text-white bg-orange-400 rounded-md hover:bg-orange-400 focus:outline-none"
 				>
-					Sort By
+					<AescDescArrow isDesc={$isDesc} />
+					<p class="text-sm text-white">{SortOptionDetails[$sortBy].str}</p>
 					<svg
 						class="w-5 h-5 ml-2 -mr-1"
 						xmlns="http://www.w3.org/2000/svg"
@@ -60,34 +72,17 @@
 						aria-labelledby="dropdownButton"
 					>
 						<div class="px-1 py-1 text-sm text-gray-700">
-							<button
-								type="button"
-								class="w-full px-4 py-2 text-sm text-left text-gray-700 hover:bg-gray-100 hover:text-gray-900"
-								on:click={() => onSort('titleIndex')}
-							>
-								Title
-							</button>
-							<button
-								type="button"
-								class="w-full px-4 py-2 text-sm text-left text-gray-700 hover:bg-gray-100 hover:text-gray-900"
-								on:click={() => onSort('durationIndex')}
-							>
-								Duration
-							</button>
-							<button
-								type="button"
-								class="w-full px-4 py-2 text-sm text-left text-gray-700 hover:bg-gray-100 hover:text-gray-900"
-								on:click={() => onSort('channelIndex')}
-							>
-								Channel
-							</button>
-							<button
-								type="button"
-								class="w-full px-4 py-2 text-sm text-left text-gray-700 hover:bg-gray-100 hover:text-gray-900"
-								on:click={() => onSort('publishedAtIndex')}
-							>
-								Published
-							</button>
+							{#each Object.values(SortOptions) as item}
+								<button
+									type="button"
+									class="flex justify-between w-full px-4 py-2 text-sm text-left text-gray-700 hover:bg-gray-100 hover:text-gray-900"
+									on:click={() => sortUpdated(item)}
+									title="Sort by {SortOptionDetails[item].str} in {$sortBy === item ? !$isDesc ? 'descending' : 'ascending' : 'ascending'} order"
+								>
+									{SortOptionDetails[item].str}
+									<AescDescArrow isDesc={$sortBy === item ? !$isDesc : false} color="Orange" />
+								</button>
+							{/each}
 						</div>
 					</div>
 				</div>

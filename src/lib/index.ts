@@ -64,26 +64,37 @@ export function isoDurationToSeconds(duration: string): number {
 	return (hours * 3600) + (minutes * 60) + seconds;
 }
 
-function sanitizeStringKey(key: string): string {
-	let sanitizedKey = key.trim().toLowerCase();
-	sanitizedKey = sanitizedKey.replace(/[^\w\s]/gi, '');
-	return sanitizedKey.trim();
-}
-
-export function convertToVideoIndexDB(videoResponse: VideoJsonResponse): VideoIndexDB {
-	return {
-		categoryId: videoResponse.details.snippet.categoryId,
-		id: videoResponse.id,
-		title: sanitizeStringKey(videoResponse.details.snippet.title),
-		description: videoResponse.details.snippet.description,
-		durationSec: isoDurationToSeconds(videoResponse.details.contentDetails.duration),
-		durationSecStr: videoResponse.details.contentDetails.duration,
-		publishedAt: new Date(videoResponse.published_at),
-		publishedAtStr: videoResponse.published_at,
-		channelTitle: videoResponse.details.snippet.channelTitle,
-		channelId: videoResponse.details.snippet.channelId,
-		tags: videoResponse.details.snippet.tags,
-	};
+export function convertToVideoIndexDB(videoResponse: VideoJsonResponse | YouTubeVideo): VideoIndexDB {
+	if ('details' in videoResponse) {
+		return {
+			categoryId: videoResponse.details.snippet.categoryId,
+			id: videoResponse.id,
+			title: videoResponse.details.snippet.title,
+			description: videoResponse.details.snippet.description,
+			durationSec: isoDurationToSeconds(videoResponse.details.contentDetails.duration),
+			durationSecStr: videoResponse.details.contentDetails.duration,
+			publishedAt: new Date(videoResponse.published_at),
+			publishedAtStr: videoResponse.published_at,
+			channelTitle: videoResponse.details.snippet.channelTitle,
+			channelId: videoResponse.details.snippet.channelId,
+			tags: videoResponse.details.snippet.tags,
+		}
+	}
+	else {
+		return {
+			categoryId: videoResponse.categoryId,
+			id: videoResponse.id,
+			title: videoResponse.title,
+			description: videoResponse.description,
+			durationSec: isoDurationToSeconds(videoResponse.duration),
+			durationSecStr: videoResponse.duration,
+			publishedAt: new Date(videoResponse.publishedAt),
+			publishedAtStr: videoResponse.publishedAt,
+			channelTitle: videoResponse.channelTitle,
+			channelId: videoResponse.channelId,
+			tags: videoResponse.tags,
+		}
+	}
 }
 
 export enum CurrentPage {

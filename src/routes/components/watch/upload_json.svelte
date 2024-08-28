@@ -34,7 +34,7 @@
 								return;
 							}
 
-							const jsonData: VideoJsonResponse[] = JSON.parse(event.target.result as string)[
+							let jsonData: VideoJsonResponse[] = JSON.parse(event.target.result as string)[
 								'items'
 							];
 
@@ -62,14 +62,20 @@
 		}
 	};
 
-	// Function to store data in IndexedDB
+	function handleFileInputClick(){
+		const fileInput = document.getElementById('fileInput') as HTMLInputElement;
+		if (fileInput) {
+			fileInput.click();
+		}
+	}
+
 </script>
 
 <div>
 	{#if isLoading}
 		<div class="loader"></div>
 	{:else}
-		<Button onclick={() => document.getElementById('fileInput').click()} label="Upload JSON File" />
+		<Button onclick={handleFileInputClick} label="Upload JSON File" />
 		<!-- Hidden file input -->
 		<input
 			id="fileInput"

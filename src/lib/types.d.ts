@@ -32,6 +32,30 @@ declare global {
 		},
 	}
 
+
+	interface YouTubeVideoResponse {
+		id: string;
+		snippet: {
+			title: string;
+			channelId: string;
+			channelTitle: string;
+			description: string;
+			categoryId: string;
+			tags: string[];
+			publishedAt: string;
+			videoOwnerChannelTitle: string | null;
+			videoOwnerChannelId: string | null;
+			resourceId: {
+				videoId: string | null;
+			} | null;
+		};
+		contentDetails: {
+			duration: string;
+			videoId: string | null;
+			videoPublishedAt: string | null;
+		};
+	}
+
 	interface YouTubeVideo {
 		id: string;
 		title: string;
