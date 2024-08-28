@@ -73,7 +73,7 @@
 					</filter>
 				</defs>
 			</svg>
-			<span class="ml-5 text-2xl font-semibold">Bookmark Shelf</span>
+			<span class="ml-5 text-2xl font-semibold">King's Library</span>
 		</button>
 	</div>
 	<nav class="flex gap-5 mt-4 mb-2 text-xl">

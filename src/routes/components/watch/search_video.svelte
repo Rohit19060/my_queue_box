@@ -15,7 +15,7 @@
 		videoId = urlToYouTubeId(videoId);
 		try {
 			isLoading = true;
-			const response = await fetch(`/api/youtube?query=${encodeURIComponent(videoId)}`);
+			const response = await fetch(`/api/youtube?video=${encodeURIComponent(videoId)}`);
 			const data = await response.json();
 			console.log(data);
 			if (!response.ok) {

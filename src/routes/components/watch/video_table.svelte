@@ -27,15 +27,13 @@
 </script>
 
 <div class="flex flex-col gap-6 md:px-8">
-	<div class="flex flex-col items-start gap-4 md:flex-row md:items-center">
-		<div class="flex-1">
-			<input
-				class="w-full h-10 px-3 py-2 text-sm border rounded-md border-input bg-background ring-offset-backgroundplaceholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 ring-orange-400"
-				placeholder="Search videos..."
-				type="search"
-				on:input={(e) => onSearch(e.currentTarget.value || '')}
-			/>
-		</div>
+	<div class="flex items-center justify-center gap-4">
+		<input
+			class="w-full h-10 max-w-4xl px-3 py-2 text-sm border rounded-md border-input bg-background ring-offset-backgroundplaceholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 ring-orange-400"
+			placeholder="Search videos..."
+			type="search"
+			on:input={(e) => onSearch(e.currentTarget.value || '')}
+		/>
 		<div class="flex items-center gap-4">
 			<!-- Example of a more customized dropdown with additional options -->
 			<div class="relative inline-block text-left">
@@ -77,7 +75,11 @@
 									type="button"
 									class="flex justify-between w-full px-4 py-2 text-sm text-left text-gray-700 hover:bg-gray-100 hover:text-gray-900"
 									on:click={() => sortUpdated(item)}
-									title="Sort by {SortOptionDetails[item].str} in {$sortBy === item ? !$isDesc ? 'descending' : 'ascending' : 'ascending'} order"
+									title="Sort by {SortOptionDetails[item].str} in {$sortBy === item
+										? !$isDesc
+											? 'descending'
+											: 'ascending'
+										: 'ascending'} order"
 								>
 									{SortOptionDetails[item].str}
 									<AescDescArrow isDesc={$sortBy === item ? !$isDesc : false} color="Orange" />
