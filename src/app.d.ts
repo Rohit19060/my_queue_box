@@ -61,12 +61,6 @@ declare global {
 				likeCount: string;
 			},
 		}
-
-		// interface Error {}
-		// interface Locals {}
-		// interface PageData {}
-		// interface PageState {}
-		// interface Platform {}
 	}
 }
 
