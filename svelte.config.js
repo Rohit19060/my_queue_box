@@ -19,7 +19,7 @@ const config = {
 			strict: true
 		}),
 		paths: {
-		}
+		},
 	}
 };
 

@@ -1,7 +1,9 @@
+import { YOUTUBE_API_KEY } from '$env/static/private';
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 
-const YOUTUBE_API_KEY = import.meta.env.YOUTUBE_API_KEY as string;
+console.log(YOUTUBE_API_KEY); // Should log your API key
+
 const YOUTUBE_API_URL = 'https://www.googleapis.com/youtube/v3';
 // Implement a basic in-memory cache (for demonstration purposes)
 
@@ -9,11 +11,15 @@ export const GET: RequestHandler = async ({ url }) => {
 
     const videoId = url.searchParams.get('video');
     const playlistId = url.searchParams.get('playlist');
-    console.log(playlistId);
-    console.log(videoId);
+
+    if (YOUTUBE_API_KEY === undefined) {
+        return json({ error: 'YouTube API key is not set' }, { status: 500 });
+    }
 
     if (videoId) {
         console.log("videoId");
+        console.log(videoId);
+        console.log(`${YOUTUBE_API_URL}/videos?id=${videoId}&key=${YOUTUBE_API_KEY}&part=snippet,contentDetails,statistics&type=video`);
         const response = await fetch(`${YOUTUBE_API_URL}/videos?id=${videoId}&key=${YOUTUBE_API_KEY}&part=snippet,contentDetails,statistics&type=video`);
         if (!response.ok) {
             return json({ error: 'Failed to fetch video details' }, { status: 500 });
@@ -34,6 +40,7 @@ export const GET: RequestHandler = async ({ url }) => {
         return json(responseData);
     } else if (playlistId) {
         console.log("playlistId");
+        console.log(playlistId);
         let items: YouTubeVideoResponse[] = [];
         let responseItems: YouTubeVideo[] = [];
         let nextPageToken: string | null = null;
@@ -45,7 +52,7 @@ export const GET: RequestHandler = async ({ url }) => {
                 }`,
             );
             if (!response.ok || response.status !== 200) {
-                return json({ error: 'Failed to fetch video details' }, { status: 500 });
+                return json({ error: 'Failed to fetch Playlist details' }, { status: 500 });
             }
 
             const data = await response.json();
