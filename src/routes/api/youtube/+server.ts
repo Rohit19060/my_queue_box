@@ -1,7 +1,7 @@
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 
-const YOUTUBE_API_KEY = import.meta.env.VITE_YOUTUBE_API_KEY as string;
+const YOUTUBE_API_KEY = import.meta.env.YOUTUBE_API_KEY as string;
 const YOUTUBE_API_URL = 'https://www.googleapis.com/youtube/v3';
 // Implement a basic in-memory cache (for demonstration purposes)
 
