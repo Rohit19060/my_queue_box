@@ -9,9 +9,11 @@ export const GET: RequestHandler = async ({ url }) => {
 
     const videoId = url.searchParams.get('video');
     const playlistId = url.searchParams.get('playlist');
+    console.log(playlistId);
+    console.log(videoId);
 
     if (videoId) {
-        console.log("Got videoId");
+        console.log("videoId");
         const response = await fetch(`${YOUTUBE_API_URL}/videos?id=${videoId}&key=${YOUTUBE_API_KEY}&part=snippet,contentDetails,statistics&type=video`);
         if (!response.ok) {
             return json({ error: 'Failed to fetch video details' }, { status: 500 });
@@ -31,10 +33,13 @@ export const GET: RequestHandler = async ({ url }) => {
         };
         return json(responseData);
     } else if (playlistId) {
+        console.log("playlistId");
         let items: YouTubeVideoResponse[] = [];
         let responseItems: YouTubeVideo[] = [];
         let nextPageToken: string | null = null;
         do {
+            console.log(`${YOUTUBE_API_URL}/playlistItems?key=${YOUTUBE_API_KEY}&part=contentDetails,snippet&playlistId=${playlistId}&maxResults=50${nextPageToken ? `&pageToken=${nextPageToken}` : ""
+                }`);
             const response = await fetch(
                 `${YOUTUBE_API_URL}/playlistItems?key=${YOUTUBE_API_KEY}&part=contentDetails,snippet&playlistId=${playlistId}&maxResults=50${nextPageToken ? `&pageToken=${nextPageToken}` : ""
                 }`,
