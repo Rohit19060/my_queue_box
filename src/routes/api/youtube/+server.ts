@@ -38,10 +38,10 @@ export const GET: RequestHandler = async ({ url }) => {
         let responseItems: YouTubeVideo[] = [];
         let nextPageToken: string | null = null;
         do {
-            console.log(`${YOUTUBE_API_URL}/playlistItems?key=${YOUTUBE_API_KEY}&part=contentDetails,snippet&playlistId=${playlistId}&maxResults=50${nextPageToken ? `&pageToken=${nextPageToken}` : ""
+            console.log(`${YOUTUBE_API_URL}/playlistItems?playlistId=${playlistId}&key=${YOUTUBE_API_KEY}&part=contentDetails,snippet&maxResults=50${nextPageToken ? `&pageToken=${nextPageToken}` : ""
                 }`);
             const response = await fetch(
-                `${YOUTUBE_API_URL}/playlistItems?key=${YOUTUBE_API_KEY}&part=contentDetails,snippet&playlistId=${playlistId}&maxResults=50${nextPageToken ? `&pageToken=${nextPageToken}` : ""
+                `${YOUTUBE_API_URL}/playlistItems?playlistId=${playlistId}&key=${YOUTUBE_API_KEY}&part=contentDetails,snippet&maxResults=50${nextPageToken ? `&pageToken=${nextPageToken}` : ""
                 }`,
             );
             if (!response.ok || response.status !== 200) {
