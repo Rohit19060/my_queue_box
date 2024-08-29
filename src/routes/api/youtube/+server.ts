@@ -17,9 +17,6 @@ export const GET: RequestHandler = async ({ url }) => {
     }
 
     if (videoId) {
-        console.log("videoId");
-        console.log(videoId);
-        console.log(`${YOUTUBE_API_URL}/videos?id=${videoId}&key=${YOUTUBE_API_KEY}&part=snippet,contentDetails,statistics&type=video`);
         const response = await fetch(`${YOUTUBE_API_URL}/videos?id=${videoId}&key=${YOUTUBE_API_KEY}&part=snippet,contentDetails,statistics&type=video`);
         if (!response.ok) {
             return json({ error: 'Failed to fetch video details' }, { status: 500 });

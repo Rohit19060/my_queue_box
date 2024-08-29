@@ -19,7 +19,7 @@
 			tempVideo = data;
 		}
 		try {
-			await addVideoToIndexDB(videoDetails);
+			await addVideoToIndexDB(tempVideo);
 			onAdd();
 		} catch (e) {
 			console.error('Error adding video to indexDB', e);
@@ -32,9 +32,7 @@
 </script>
 
 <div>
-	{#if $error}
-		<p class="mt-4 text-center text-red-500">Error: {$error}</p>
-	{:else if videoDetails}
+	{#if videoDetails}
 		<div class="flex items-center justify-between gap-4 my-4">
 			<img
 				src="https://i.ytimg.com/vi/{videoDetails.id}/mqdefault.jpg"

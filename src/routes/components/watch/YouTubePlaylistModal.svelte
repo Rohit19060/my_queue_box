@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
 	import {
 		addVideoToIndexDB,
 		error,
@@ -9,13 +9,13 @@
 	import VideoDetails from './video_details.svelte';
 
 	export let onAdd = () => console.log('Add button clicked');
-	
+
 	let isLoading = false;
-	
+
 	function closeModal() {
 		isPlayListModalOpen.set(false);
 	}
-	
+
 	async function addAllVideos() {
 		if (!playlistVideos) {
 			return;
@@ -29,7 +29,8 @@
 				if (!response.ok) {
 					throw new Error(data.error);
 				}
-				await addVideoToIndexDB(data);
+				let res: YouTubeVideo = data;
+				await addVideoToIndexDB(res);
 			}
 			onAdd();
 			playlistVideos.set([]);

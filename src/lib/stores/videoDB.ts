@@ -156,15 +156,14 @@ export async function addVideoToIndexDB(video: YouTubeVideo) {
             const videos = video.map((item) => convertToVideoIndexDB(item));
             const request = objectStore.put(videos);
             request.onsuccess = () => resolve(video);
-            request.onerror = (event: Event) => {
+            request.onerror = (event: Event) =>
                 reject((event.target as IDBRequest).error);
-            };
         } else {
             const request = objectStore.put(convertToVideoIndexDB(video));
             request.onsuccess = () => resolve(video);
-            request.onerror = (event: Event) => {
+            request.onerror = (event: Event) =>
                 reject((event.target as IDBRequest).error);
-            };
+
         }
     });
 }
