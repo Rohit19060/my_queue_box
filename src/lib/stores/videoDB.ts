@@ -21,7 +21,7 @@ export const SortOptionDetails: { [key in SortOptions]: { keypath: string[] | st
 };
 
 // export const SORT_OPTIONS = ['titleIndex', 'durationIndex', 'channelIndex', 'publishedAtIndex'];
-export const sortBy = writable<SortOptions>(SortOptions.Title);
+export const sortBy = writable<SortOptions>(SortOptions.PublishedAt);
 export const isDesc = writable<boolean>(true);
 export const dataStore = writable<VideoIndexDB[]>([]);
 export const searchDataStore = writable<VideoIndexDB[]>([]);
@@ -49,10 +49,9 @@ function openDatabase(): Promise<IDBDatabase> {
                 upgradeInProgress = true;
                 if (!db.objectStoreNames.contains(DB_VIDEO_STORE)) {
                     const objectStore = db.createObjectStore(DB_VIDEO_STORE, { keyPath: 'id' }) as IDBObjectStore;
-                    objectStore.createIndex(SortOptions.Title, SortOptionDetails[SortOptions.Title].keypath);
-                    objectStore.createIndex(SortOptions.Duration, SortOptionDetails[SortOptions.Duration].keypath);
-                    objectStore.createIndex(SortOptions.Channel, SortOptionDetails[SortOptions.Channel].keypath);
-                    objectStore.createIndex(SortOptions.PublishedAt, SortOptionDetails[SortOptions.PublishedAt].keypath);
+                    Object.values(SortOptions).forEach((sortOption) => {
+                        objectStore.createIndex(sortOption, SortOptionDetails[sortOption].keypath);
+                    });
                 }
                 upgradeInProgress = false;
             }
@@ -107,7 +106,7 @@ export async function storeDataInIndexedDB(data: VideoJsonResponse[]): Promise<v
 }
 
 
-export async function fetchPaginatedData(cursorValue: IDBValidKey | null, sortBy: string = 'titleIndex', isDesc: boolean = true): Promise<{ data: VideoIndexDB[], nextCursorValue: IDBValidKey | null }> {
+export async function fetchPaginatedData(cursorValue: IDBValidKey | null, sortBy: SortOptions = SortOptions.PublishedAt, isDesc: boolean = true): Promise<{ results: VideoIndexDB[], nextCursorValue: IDBValidKey | null }> {
     const db = await openDatabase();
     const transaction = db.transaction(DB_VIDEO_STORE, 'readonly');
     const objectStore = transaction.objectStore(DB_VIDEO_STORE);
@@ -125,17 +124,13 @@ export async function fetchPaginatedData(cursorValue: IDBValidKey | null, sortBy
 
         openRequest.onsuccess = (event: Event) => {
             const cursor = (event.target as IDBRequest<IDBCursorWithValue>).result;
-            if (cursor) {
-                if (counter < ITEMS_PER_PAGE) {
-                    results.push(cursor.value);
-                    counter++;
-                    nextCursorValue = cursor.key;
-                    cursor.continue();
-                } else {
-                    resolve({ data: results, nextCursorValue });
-                }
+            if (cursor && counter < ITEMS_PER_PAGE) {
+                results.push(cursor.value);
+                counter++;
+                nextCursorValue = cursor.key;
+                cursor.continue();
             } else {
-                resolve({ data: results, nextCursorValue: null });
+                resolve({ results, nextCursorValue });
             }
         };
 
@@ -173,7 +168,7 @@ export async function removeVideoFromIndexDB(id: string) {
 }
 
 
-export async function searchVideos(cursorValue: IDBValidKey | null, sortBy: string = 'titleIndex', isDesc: boolean = true, searchText: string): Promise<{ data: VideoIndexDB[], nextCursorValue: IDBValidKey | null }> {
+export async function searchVideos(cursorValue: IDBValidKey | null, sortBy: string = 'titleIndex', isDesc: boolean = true, searchText: string): Promise<{ results: VideoIndexDB[], nextCursorValue: IDBValidKey | null }> {
     const db = await openDatabase();
     const transaction = db.transaction(DB_VIDEO_STORE, 'readonly');
     const objectStore = transaction.objectStore(DB_VIDEO_STORE);
@@ -185,7 +180,9 @@ export async function searchVideos(cursorValue: IDBValidKey | null, sortBy: stri
     let nextCursorValue: IDBValidKey | null = null;
 
     return new Promise((resolve, reject) => {
-        const openRequest = cursorValue !== null ? index.openCursor(IDBKeyRange.lowerBound(cursorValue, true), direction) : index.openCursor(null, direction);
+        const openRequest = cursorValue != null
+            ? index.openCursor(direction == 'prev' ? IDBKeyRange.upperBound(cursorValue, true) : IDBKeyRange.lowerBound(cursorValue, true), direction)
+            : index.openCursor(null, direction);
 
         const searchTextLower = searchText.toLowerCase();
         openRequest.onsuccess = (event: Event) => {
@@ -199,7 +196,7 @@ export async function searchVideos(cursorValue: IDBValidKey | null, sortBy: stri
                 nextCursorValue = cursor.key;
                 cursor.continue();
             } else {
-                resolve({ data: results, nextCursorValue });
+                resolve({ results, nextCursorValue });
             }
         };
 

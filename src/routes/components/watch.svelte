@@ -27,17 +27,13 @@
 		if (!get(hasMore)) return;
 		try {
 			const cursorValue = get(currentCursorValue);
-			const { data: newItems, nextCursorValue } = await fetchPaginatedData(
-				cursorValue,
-				$sortBy,
-				$isDesc
-			);
-			if (newItems.length === 0 || nextCursorValue === null) {
+			const { results, nextCursorValue } = await fetchPaginatedData(cursorValue, $sortBy, $isDesc);
+			if (results.length === 0 || nextCursorValue === null) {
 				hasMore.set(false);
 			} else {
 				dataStore.update((items) => {
 					let newItemsCopy = [...items];
-					newItems.forEach((item) => {
+					results.forEach((item) => {
 						if (newItemsCopy.findIndex((x) => x.id === item.id) === -1) {
 							newItemsCopy.push(item);
 						}
@@ -89,17 +85,24 @@
 		};
 	});
 
-	async function reset(sortText: SortOptions) {
-		if (sortText == $sortBy) {
-			$isDesc = !$isDesc;
-		} else {
-			$sortBy = sortText;
-			$isDesc = false;
+	async function reset(sortText: SortOptions, shouldNotResetSort: boolean = true) {
+		if (shouldNotResetSort) {
+			if (sortText == $sortBy) {
+				$isDesc = !$isDesc;
+			} else {
+				$sortBy = sortText;
+				$isDesc = false;
+			}
 		}
 		dataStore.update(() => []);
 		currentCursorValue.set(null);
 		hasMore.set(true);
-		await loadMoreItems();
+		console.log(searchText.length);
+		if (searchText.length === 0) {
+			await loadMoreItems();
+		} else {
+			await searchVideo(searchText, false);
+		}
 	}
 
 	async function removeVideo(id: string) {
@@ -115,7 +118,7 @@
 	async function searchVideo(str: string, isScroll: boolean = false) {
 		searchText = str;
 		if (str.length === 0) {
-			reset(SortOptions.Title);
+			reset($sortBy, false);
 			return;
 		}
 		try {
@@ -125,16 +128,11 @@
 			} else {
 				cursorValue = null;
 			}
-			const { data: newItems, nextCursorValue } = await searchVideos(
-				cursorValue,
-				$sortBy,
-				$isDesc,
-				str
-			);
+			const { results, nextCursorValue } = await searchVideos(cursorValue, $sortBy, $isDesc, str);
 			if (isScroll) {
 				dataStore.update((x) => {
 					let newItemsCopy = [...x];
-					newItems.forEach((item) => {
+					results.forEach((item) => {
 						if (newItemsCopy.findIndex((x) => x.id === item.id) === -1) {
 							newItemsCopy.push(item);
 						}
@@ -142,7 +140,7 @@
 					return newItemsCopy;
 				});
 			} else {
-				dataStore.update(() => newItems);
+				dataStore.update(() => results);
 			}
 			currentCursorValue.set(nextCursorValue);
 		} catch (e) {
