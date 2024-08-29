@@ -11,6 +11,7 @@
 		videoId
 	} from '$lib/stores/videoDB';
 	import Button from '../home/Button.svelte';
+	import YouTubeModal from './YouTubeModal.svelte';
 
 	export let data: VideoIndexDB[] = [];
 	export let onSort = (str: SortOptions) => console.log(str);
@@ -149,3 +150,5 @@
 		{/each}
 	</div>
 </div>
+
+<YouTubeModal />

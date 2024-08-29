@@ -29,6 +29,8 @@ export const hasMore = writable(true);
 export const currentCursorValue = writable<IDBValidKey | null>(null);
 export const videoId = writable<string>('');
 export const isModalOpen = writable(false);
+export const isPlayListModalOpen = writable(false);
+export const playlistVideos = writable<YouTubeVideo[]>([]);
 export const videoDetails = writable<YouTubeVideo | null>(null);
 export const error = writable<string | null>(null);
 
@@ -143,17 +145,30 @@ export async function fetchPaginatedData(cursorValue: IDBValidKey | null, sortBy
 
 
 export async function addVideoToIndexDB(video: YouTubeVideo) {
+    if (!video) {
+        return;
+    }
     const db = await openDatabase();
     const transaction = db.transaction(DB_VIDEO_STORE, 'readwrite');
     const objectStore = transaction.objectStore(DB_VIDEO_STORE);
     return new Promise((resolve, reject) => {
-        const request = objectStore.put(convertToVideoIndexDB(video));
-        request.onsuccess = () => resolve(video);
-        request.onerror = (event: Event) => {
-            reject((event.target as IDBRequest).error);
-        };
+        if (Array.isArray(video)) {
+            const videos = video.map((item) => convertToVideoIndexDB(item));
+            const request = objectStore.put(videos);
+            request.onsuccess = () => resolve(video);
+            request.onerror = (event: Event) => {
+                reject((event.target as IDBRequest).error);
+            };
+        } else {
+            const request = objectStore.put(convertToVideoIndexDB(video));
+            request.onsuccess = () => resolve(video);
+            request.onerror = (event: Event) => {
+                reject((event.target as IDBRequest).error);
+            };
+        }
     });
 }
+
 
 export async function removeVideoFromIndexDB(id: string) {
     const db = await openDatabase();

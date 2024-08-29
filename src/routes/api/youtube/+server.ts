@@ -31,20 +31,14 @@ export const GET: RequestHandler = async ({ url }) => {
         };
         return json(responseData);
     } else if (playlistId) {
-        console.log("Got playlistId");
-        console.log(playlistId);
         let items: YouTubeVideoResponse[] = [];
         let responseItems: YouTubeVideo[] = [];
         let nextPageToken: string | null = null;
         do {
-            console.log("Request: " + `${YOUTUBE_API_URL}/playlistItems?key=${YOUTUBE_API_KEY}&part=contentDetails,snippet&playlistId=${playlistId}&maxResults=50${nextPageToken ? `&pageToken=${nextPageToken}` : ""
-                }`);
             const response = await fetch(
                 `${YOUTUBE_API_URL}/playlistItems?key=${YOUTUBE_API_KEY}&part=contentDetails,snippet&playlistId=${playlistId}&maxResults=50${nextPageToken ? `&pageToken=${nextPageToken}` : ""
                 }`,
             );
-            console.log(response);
-
             if (!response.ok || response.status !== 200) {
                 return json({ error: 'Failed to fetch video details' }, { status: 500 });
             }

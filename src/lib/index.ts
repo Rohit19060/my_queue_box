@@ -128,5 +128,11 @@ export function urlToYouTubeId(urlOrId: string): string {
 	return match ? match[1] : urlOrId;
 }
 
+export function urlToPlayListId(urlOrId: string): string {
+	const regex = /(?:list=)?([a-zA-Z0-9_-]+)$/;
+	const match = urlOrId.match(regex);
+	return match ? match[1] : urlOrId;
+}
+
 
 

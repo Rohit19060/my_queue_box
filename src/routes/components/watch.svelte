@@ -9,15 +9,16 @@
 		searchDataStore,
 		searchVideos,
 		sortBy,
-		SortOptions
+		SortOptions,
+		videoDetails
 	} from '$lib/stores/videoDB';
 	import { onMount } from 'svelte';
 	import { get } from 'svelte/store';
 	import SearchVideo from './watch/search_video.svelte';
+	import SearchPlayList from './watch/SearchPlayList.svelte';
 	import UploadJson from './watch/upload_json.svelte';
 	import VideoDetails from './watch/video_details.svelte';
 	import VideoTable from './watch/video_table.svelte';
-	import YouTubeModal from './watch/YouTubeModal.svelte';
 
 	let observer: IntersectionObserver;
 
@@ -74,7 +75,7 @@
 
 		// Set up event listener for data changes
 		const dataChangeListener = async () => {
-			await reset($sortBy);
+			await reset($sortBy, false);
 		};
 
 		window.addEventListener('data-changed', dataChangeListener);
@@ -150,11 +151,12 @@
 	}
 </script>
 
-<div class="flex items-center justify-center gap-4 my-4">
+<div class="flex items-center justify-center gap-8 my-4">
 	<SearchVideo />
+	<SearchPlayList onAdd={() => reset($sortBy, false)} />
 	<UploadJson />
 </div>
-<VideoDetails onAdd={() => reset($sortBy, false)} />
+<VideoDetails onAdd={() => reset($sortBy, false)} videoDetails={$videoDetails} />
 {#if dataLoaded}
 	<div class="loader"></div>
 {:else if $searchDataStore.length > 0}
@@ -172,7 +174,5 @@
 		onRemove={(str) => removeVideo(str)}
 	/>
 {/if}
-
-<YouTubeModal />
 
 <div id="load-more-trigger"></div>
