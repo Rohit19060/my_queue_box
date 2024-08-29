@@ -27,7 +27,8 @@ export const dataStore = writable<VideoIndexDB[]>([]);
 export const searchDataStore = writable<VideoIndexDB[]>([]);
 export const hasMore = writable(true);
 export const currentCursorValue = writable<IDBValidKey | null>(null);
-
+export const videoId = writable<string>('');
+export const isModalOpen = writable(false);
 export const videoDetails = writable<YouTubeVideo | null>(null);
 export const error = writable<string | null>(null);
 

@@ -2,7 +2,14 @@
 	import AescDescArrow from './AescDescArrow.svelte';
 
 	import { secondsToHumanReadable, timeAgo } from '$lib';
-	import { isDesc, sortBy, SortOptionDetails, SortOptions } from '$lib/stores/videoDB';
+	import {
+		isDesc,
+		isModalOpen,
+		sortBy,
+		SortOptionDetails,
+		SortOptions,
+		videoId
+	} from '$lib/stores/videoDB';
 	import Button from '../home/Button.svelte';
 
 	export let data: VideoIndexDB[] = [];
@@ -24,9 +31,14 @@
 			dropdownMenu.classList.toggle('hidden');
 		}
 	}
+
+	function openModal(id = '') {
+		videoId.set(id);
+		isModalOpen.set(true);
+	}
 </script>
 
-<div class="flex flex-col gap-6 md:px-8">
+<div class="flex flex-col gap-6 md:p-8">
 	<div class="flex items-center justify-center gap-4">
 		<input
 			class="w-full h-10 max-w-4xl px-3 py-2 text-sm border rounded-md border-input bg-background ring-offset-backgroundplaceholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 ring-orange-400"
@@ -35,7 +47,6 @@
 			on:input={(e) => onSearch(e.currentTarget.value || '')}
 		/>
 		<div class="flex items-center gap-4">
-			<!-- Example of a more customized dropdown with additional options -->
 			<div class="relative inline-block text-left">
 				<button
 					id="dropdownButton"
@@ -95,7 +106,7 @@
 	<div class="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
 		{#each data as item, i}
 			<div class="flex flex-col justify-between bg-background rounded-xl group">
-				<a href="https://www.youtube.com/watch?v={item.id}">
+				<button on:click={() => openModal(item.id)}>
 					<div class="relative">
 						<img
 							src="https://i.ytimg.com/vi/{item.id}/mqdefault.jpg"
@@ -113,9 +124,13 @@
 							{secondsToHumanReadable(item.durationSec)}
 						</div>
 					</div>
-				</a>
+				</button>
 				<div class="flex flex-col mt-3">
-					<a href="https://www.youtube.com/watch?v={item.id}">
+					<a
+						href="https://www.youtube.com/watch?v={item.id}"
+						target="_blank"
+						rel="noopener noreferrer"
+					>
 						<h3 class="font-medium capitalize line-clamp-2 min-h-12">{item.title}</h3>
 					</a>
 					<div class="flex items-center justify-between mt-2">

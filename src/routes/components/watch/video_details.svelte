@@ -2,14 +2,18 @@
 	import { addVideoToIndexDB, error, videoDetails } from '$lib/stores/videoDB';
 	import Button from '../home/Button.svelte';
 
-	function addToIndexDB() {
+	export let onAdd = () => console.log('Add button clicked');
+
+	async function addToIndexDB() {
 		if (!$videoDetails) {
 			return;
 		}
 		try {
-			addVideoToIndexDB($videoDetails);
+			await addVideoToIndexDB($videoDetails);
+			onAdd();
 		} catch (e) {
 			console.error('Error adding video to indexDB', e);
+			error.set(`Couldn't add video to indexDB ${e}`);
 			return;
 		} finally {
 			error.set(null);

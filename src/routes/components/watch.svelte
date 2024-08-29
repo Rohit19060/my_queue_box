@@ -17,6 +17,7 @@
 	import UploadJson from './watch/upload_json.svelte';
 	import VideoDetails from './watch/video_details.svelte';
 	import VideoTable from './watch/video_table.svelte';
+	import YouTubeModal from './watch/YouTubeModal.svelte';
 
 	let observer: IntersectionObserver;
 
@@ -97,7 +98,6 @@
 		dataStore.update(() => []);
 		currentCursorValue.set(null);
 		hasMore.set(true);
-		console.log(searchText.length);
 		if (searchText.length === 0) {
 			await loadMoreItems();
 		} else {
@@ -154,7 +154,7 @@
 	<SearchVideo />
 	<UploadJson />
 </div>
-<VideoDetails />
+<VideoDetails onAdd={() => reset($sortBy, false)} />
 {#if dataLoaded}
 	<div class="loader"></div>
 {:else if $searchDataStore.length > 0}
@@ -172,5 +172,7 @@
 		onRemove={(str) => removeVideo(str)}
 	/>
 {/if}
+
+<YouTubeModal />
 
 <div id="load-more-trigger"></div>
