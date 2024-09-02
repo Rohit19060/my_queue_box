@@ -1,5 +1,6 @@
 <script lang="ts">
-	import { storeDataInIndexedDB } from '$lib/stores/videoDB';
+	import { storeDataInIndexedDB } from '$lib/stores/VideoDB';
+	import { onDestroy, onMount } from 'svelte';
 	import Button from '../home/Button.svelte';
 
 	// Define the structure of the data to be stored
@@ -34,7 +35,7 @@
 								return;
 							}
 
-							let jsonData: VideoJsonResponse[] = JSON.parse(event.target.result as string)[
+							let jsonData: App.VideoJsonResponse[] = JSON.parse(event.target.result as string)[
 								'items'
 							];
 
@@ -62,28 +63,52 @@
 		}
 	};
 
-	function handleFileInputClick(){
+	function handleFileInputClick() {
 		const fileInput = document.getElementById('fileInput') as HTMLInputElement;
 		if (fileInput) {
 			fileInput.click();
 		}
 	}
 
+	let isMobile: boolean;
+
+	function detectPlatform() {
+		const userAgent = navigator.userAgent;
+		// Basic checks for common mobile user agents
+		const isMobileUserAgent = /android|iPad|iPhone|iPod/.test(userAgent);
+
+		// Use media queries as a fallback or supplement
+		const isMobileMediaQuery = window.matchMedia('(max-width: 767px)').matches;
+
+		isMobile = isMobileUserAgent || isMobileMediaQuery;
+	}
+
+	onMount(() => {
+		detectPlatform();
+		window.addEventListener('resize', detectPlatform);
+	});
+
+	onDestroy(() => {
+		window.removeEventListener('resize', detectPlatform);
+	});
 </script>
 
-<div>
-	{#if isLoading}
-		<div class="loader"></div>
-	{:else}
-		<Button onclick={handleFileInputClick} label="Upload JSON File" />
-		<!-- Hidden file input -->
-		<input
-			id="fileInput"
-			type="file"
-			accept=".json"
-			class="hidden"
-			on:change={handleFileUpload}
-			multiple
-		/>
-	{/if}
-</div>
+{#if !isMobile}
+	<!-- content here -->
+	<div>
+		{#if isLoading}
+			<div class="loader"></div>
+		{:else}
+			<Button onclick={handleFileInputClick} label="Upload JSON File" />
+			<!-- Hidden file input -->
+			<input
+				id="fileInput"
+				type="file"
+				accept=".json"
+				class="hidden"
+				on:change={handleFileUpload}
+				multiple
+			/>
+		{/if}
+	</div>
+{/if}

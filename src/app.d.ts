@@ -7,12 +7,14 @@ declare global {
 			title: string;
 			description: string;
 			durationSec: number;
+			durationSecStr: string;
 			channelTitle: string;
 			channelId: string;
-			viewCount: string;
-			likeCount: string;
+			categoryId: string;
 			tags: string[];
-			publishedAt: DateTime;
+			publishedAt: Date;
+			publishedAtStr: string;
+			watched: boolean;
 		}
 		interface VideoJsonResponse {
 			id: string;
@@ -30,15 +32,11 @@ declare global {
 				contentDetails: {
 					duration: string;
 				},
-
-				statistics: {
-					viewCount: string;
-					likeCount: string;
-				},
 			},
 		}
 
-		interface YouTubeVideo {
+
+		interface YouTubeVideoResponse {
 			id: string;
 			snippet: {
 				title: string;
@@ -47,19 +45,37 @@ declare global {
 				description: string;
 				categoryId: string;
 				tags: string[];
-				thumbnails: {
-					maxres: {
-						url: string;
-					}
-				}
-			},
+				publishedAt: string;
+				videoOwnerChannelTitle: string | null;
+				videoOwnerChannelId: string | null;
+				resourceId: {
+					videoId: string | null;
+				} | null;
+			};
 			contentDetails: {
 				duration: string;
-			},
-			statistics: {
-				viewCount: string;
-				likeCount: string;
-			},
+				videoId: string | null;
+				videoPublishedAt: string | null;
+			};
+		}
+
+		interface YouTubeVideo {
+			id: string;
+			title: string;
+			description: string;
+			duration: string;
+			channelTitle: string;
+			channelId: string;
+			categoryId: string;
+			tags: string[];
+			publishedAt: string;
+		}
+		type AfterSort = (sort: SortOptions) => void;
+		type OnSearch = (search: string) => void;
+
+		interface YouTubeIdResult {
+			type: YouTubeIdType;
+			id: string;
 		}
 	}
 }

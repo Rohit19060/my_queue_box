@@ -1,4 +1,5 @@
-import { currentCursorValue, dataStore, hasMore, page } from "./stores/videoDB";
+import { PAGE } from "./stores/SpaStore";
+import { CURRENT_CURSOR, HAS_MORE, VIDEO_STORE } from "./stores/VideoDB";
 
 export function dateToHumanReadable(date: Date): string {
 	return date.toLocaleDateString('en-US', {
@@ -64,7 +65,7 @@ export function isoDurationToSeconds(duration: string): number {
 	return (hours * 3600) + (minutes * 60) + seconds;
 }
 
-export function convertToVideoIndexDB(videoResponse: VideoJsonResponse | YouTubeVideo): VideoIndexDB {
+export function convertToVideoIndexDB(videoResponse: App.VideoJsonResponse | App.YouTubeVideo): App.VideoIndexDB {
 	if ('details' in videoResponse) {
 		return {
 			categoryId: videoResponse.details.snippet.categoryId,
@@ -78,6 +79,7 @@ export function convertToVideoIndexDB(videoResponse: VideoJsonResponse | YouTube
 			channelTitle: videoResponse.details.snippet.channelTitle,
 			channelId: videoResponse.details.snippet.channelId,
 			tags: videoResponse.details.snippet.tags,
+			watched: false,
 		}
 	}
 	else {
@@ -93,6 +95,7 @@ export function convertToVideoIndexDB(videoResponse: VideoJsonResponse | YouTube
 			channelTitle: videoResponse.channelTitle,
 			channelId: videoResponse.channelId,
 			tags: videoResponse.tags,
+			watched: false,
 		}
 	}
 }
@@ -100,39 +103,44 @@ export function convertToVideoIndexDB(videoResponse: VideoJsonResponse | YouTube
 export enum CurrentPage {
 	Home = 0,
 	Read = 1,
-	Watch = 2,
-	Settings = 3,
-	About = 4,
-	Contact = 5,
-	Login = 6,
-	Register = 7,
-	Logout = 8,
+	Watch = 2
+}
+
+
+export enum YouTubeIdType {
+	Video = "VIDEO",
+	Playlist = "PLAYLIST",
+	Unknown = "UNKNOWN"
 }
 
 export function setSpaPage(x: CurrentPage) {
-	dataStore.update(() => []);
-	currentCursorValue.set(null);
-	hasMore.set(true);
-	page.set(x);
+	VIDEO_STORE.update(() => []);
+	CURRENT_CURSOR.set(null);
+	HAS_MORE.set(true);
+	PAGE.set(x);
 	localStorage.setItem('spaPage', x.toString());
 }
 
-export function urlToYouTubeId(urlOrId: string): string {
+
+export function extractYouTubeId(urlOrId: string): App.YouTubeIdResult {
 	// Regular expression to match YouTube video IDs
 	const videoIdExp = /^(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/(?:[^\\n\s]+\/\S+\/|(?:v|e(?:mbed)?)\/|\S*?[?&]v=)|youtu\.be\/)([a-zA-Z0-9_-]{11})/i;
 
+	// Regular expression to match YouTube playlist IDs
+	const playlistIdExp = /(?:list=)?([a-zA-Z0-9_-]+)$/;
+
 	// Check if the input matches the video ID pattern
-	const match = urlOrId.match(videoIdExp);
+	const videoMatch = urlOrId.match(videoIdExp);
+	if (videoMatch) {
+		return { type: YouTubeIdType.Video, id: videoMatch[1] };
+	}
 
-	// If there's a match, return the video ID, otherwise return the input as-is
-	return match ? match[1] : urlOrId;
+	// Check if the input matches the playlist ID pattern
+	const playlistMatch = urlOrId.match(playlistIdExp);
+	if (playlistMatch) {
+		return { type: YouTubeIdType.Playlist, id: playlistMatch[1] };
+	}
+
+	// If neither match, return unknown type with the input as the ID
+	return { type: YouTubeIdType.Unknown, id: urlOrId };
 }
-
-export function urlToPlayListId(urlOrId: string): string {
-	const regex = /(?:list=)?([a-zA-Z0-9_-]+)$/;
-	const match = urlOrId.match(regex);
-	return match ? match[1] : urlOrId;
-}
-
-
-

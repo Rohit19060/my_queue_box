@@ -1,9 +1,17 @@
 <script>
 	import { CurrentPage, setSpaPage } from '$lib';
+	import { totalVideoCountFn } from '$lib/stores/SpaStore';
+	import { onMount } from 'svelte';
 	import BookmarkCard from './home/BookmarkCard.svelte';
 	import Button from './home/Button.svelte';
 	import CountAnalytics from './home/CountAnalytics.svelte';
 	import VideoCard from './home/VideoCard.svelte';
+
+	let totalVideoCount = 0;
+
+	onMount(async () => {
+		totalVideoCount = await totalVideoCountFn();
+	});
 </script>
 
 <div class="flex flex-col min-h-[100dvh]">
@@ -11,7 +19,7 @@
 		<div class="col-span-1 p-4 rounded-lg shadow-sm bg-background md:p-6 md:col-span-2">
 			<div class="grid gap-10 sm:grid-cols-2">
 				<CountAnalytics
-					totalCount={456}
+					totalCount={totalVideoCount}
 					pendingCount={124}
 					label="Bookmarks"
 					undoneLabel="Unopened Bookmarks"

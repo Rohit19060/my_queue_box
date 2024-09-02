@@ -1,39 +1,42 @@
 <script lang="ts">
 	import {
-		currentCursorValue,
-		dataStore,
+		CURRENT_CURSOR,
 		fetchPaginatedData,
-		hasMore,
-		isDesc,
-		removeVideoFromIndexDB,
-		searchDataStore,
+		HAS_MORE,
+		IS_DESC,
+		SEARCHED_VIDEO_DETAILS,
 		searchVideos,
-		sortBy,
+		SORT_BY,
 		SortOptions,
-		videoDetails
-	} from '$lib/stores/videoDB';
+		VIDEO_STORE
+	} from '$lib/stores/VideoDB';
 	import { onMount } from 'svelte';
 	import { get } from 'svelte/store';
-	import SearchVideo from './watch/search_video.svelte';
-	import SearchPlayList from './watch/SearchPlayList.svelte';
-	import UploadJson from './watch/upload_json.svelte';
-	import VideoDetails from './watch/video_details.svelte';
-	import VideoTable from './watch/video_table.svelte';
+	import VideoDetails from './watch/SearchedVideoDetails.svelte';
+
+	import SearchVideo from './watch/SearchVideoForm.svelte';
+	import UploadJson from './watch/UploadJsonFile.svelte';
+	import VideoTable from './watch/VideosGrid.svelte';
+	import VideosSearch from './watch/VideosSearch.svelte';
 
 	let observer: IntersectionObserver;
 
-	let dataLoaded = true;
+	let dataLoaded = false;
 	let searchText = '';
 
 	async function loadMoreItems() {
-		if (!get(hasMore)) return;
+		if (!get(HAS_MORE)) return;
 		try {
-			const cursorValue = get(currentCursorValue);
-			const { results, nextCursorValue } = await fetchPaginatedData(cursorValue, $sortBy, $isDesc);
+			const cursorValue = get(CURRENT_CURSOR);
+			const { results, nextCursorValue } = await fetchPaginatedData(
+				cursorValue,
+				$SORT_BY,
+				$IS_DESC
+			);
 			if (results.length === 0 || nextCursorValue === null) {
-				hasMore.set(false);
+				HAS_MORE.set(false);
 			} else {
-				dataStore.update((items) => {
+				VIDEO_STORE.update((items) => {
 					let newItemsCopy = [...items];
 					results.forEach((item) => {
 						if (newItemsCopy.findIndex((x) => x.id === item.id) === -1) {
@@ -42,12 +45,12 @@
 					});
 					return newItemsCopy;
 				});
-				currentCursorValue.set(nextCursorValue);
+				CURRENT_CURSOR.set(nextCursorValue);
 			}
 		} catch (error) {
 			console.error('Failed to load more items:', error);
 		} finally {
-			dataLoaded = false;
+			dataLoaded = true;
 		}
 	}
 
@@ -75,7 +78,7 @@
 
 		// Set up event listener for data changes
 		const dataChangeListener = async () => {
-			await reset($sortBy, false);
+			await reset($SORT_BY, false);
 		};
 
 		window.addEventListener('data-changed', dataChangeListener);
@@ -89,16 +92,16 @@
 
 	async function reset(sortText: SortOptions, shouldNotResetSort: boolean = true) {
 		if (shouldNotResetSort) {
-			if (sortText == $sortBy) {
-				$isDesc = !$isDesc;
+			if (sortText == $SORT_BY) {
+				$IS_DESC = !$IS_DESC;
 			} else {
-				$sortBy = sortText;
-				$isDesc = false;
+				$SORT_BY = sortText;
+				$IS_DESC = false;
 			}
 		}
-		dataStore.update(() => []);
-		currentCursorValue.set(null);
-		hasMore.set(true);
+		VIDEO_STORE.update(() => []);
+		CURRENT_CURSOR.set(null);
+		HAS_MORE.set(true);
 		if (searchText.length === 0) {
 			await loadMoreItems();
 		} else {
@@ -106,32 +109,22 @@
 		}
 	}
 
-	async function removeVideo(id: string) {
-		try {
-			await removeVideoFromIndexDB(id);
-			dataStore.update((x) => x.filter((x) => x.id !== id));
-		} catch (e) {
-			console.error('Error removing video from indexDB', e);
-			return;
-		}
-	}
-
 	async function searchVideo(str: string, isScroll: boolean = false) {
 		searchText = str;
 		if (str.length === 0) {
-			reset($sortBy, false);
+			reset($SORT_BY, false);
 			return;
 		}
 		try {
 			let cursorValue: IDBValidKey | null;
 			if (isScroll) {
-				cursorValue = get(currentCursorValue);
+				cursorValue = get(CURRENT_CURSOR);
 			} else {
 				cursorValue = null;
 			}
-			const { results, nextCursorValue } = await searchVideos(cursorValue, $sortBy, $isDesc, str);
+			const { results, nextCursorValue } = await searchVideos(cursorValue, $SORT_BY, $IS_DESC, str);
 			if (isScroll) {
-				dataStore.update((x) => {
+				VIDEO_STORE.update((x) => {
 					let newItemsCopy = [...x];
 					results.forEach((item) => {
 						if (newItemsCopy.findIndex((x) => x.id === item.id) === -1) {
@@ -141,9 +134,9 @@
 					return newItemsCopy;
 				});
 			} else {
-				dataStore.update(() => results);
+				VIDEO_STORE.update(() => results);
 			}
-			currentCursorValue.set(nextCursorValue);
+			CURRENT_CURSOR.set(nextCursorValue);
 		} catch (e) {
 			console.error('Error searching videos', e);
 			return;
@@ -151,28 +144,18 @@
 	}
 </script>
 
-<div class="flex items-center justify-center gap-8 my-4">
+<div class="flex flex-col items-center justify-center gap-8 my-4 md:flex-row">
 	<SearchVideo />
-	<SearchPlayList onAdd={() => reset($sortBy, false)} />
 	<UploadJson />
 </div>
-<VideoDetails onAdd={() => reset($sortBy, false)} videoDetails={$videoDetails} />
+<div class="mx-auto ">
+	<VideoDetails videoDetails={$SEARCHED_VIDEO_DETAILS} />
+</div>
+<VideosSearch onSort={(x) => reset(x)} onSearch={(y) => searchVideo(y)} />
 {#if dataLoaded}
-	<div class="loader"></div>
-{:else if $searchDataStore.length > 0}
-	<VideoTable
-		data={$searchDataStore}
-		onSort={(str) => reset(str)}
-		onSearch={(str) => searchVideo(str)}
-		onRemove={(str) => removeVideo(str)}
-	/>
+	<VideoTable />
 {:else}
-	<VideoTable
-		data={$dataStore}
-		onSort={(str) => reset(str)}
-		onSearch={(str) => searchVideo(str)}
-		onRemove={(str) => removeVideo(str)}
-	/>
+	<div class="loader"></div>
 {/if}
 
 <div id="load-more-trigger"></div>

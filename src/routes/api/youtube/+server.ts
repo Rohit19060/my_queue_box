@@ -2,10 +2,7 @@ import { YOUTUBE_API_KEY } from '$env/static/private';
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 
-console.log(YOUTUBE_API_KEY); // Should log your API key
-
 const YOUTUBE_API_URL = 'https://www.googleapis.com/youtube/v3';
-// Implement a basic in-memory cache (for demonstration purposes)
 
 export const GET: RequestHandler = async ({ url }) => {
 
@@ -22,8 +19,8 @@ export const GET: RequestHandler = async ({ url }) => {
             return json({ error: 'Failed to fetch video details' }, { status: 500 });
         }
         const data = await response.json();
-        const video: YouTubeVideoResponse = data.items[0];
-        const responseData: YouTubeVideo = {
+        const video: App.YouTubeVideoResponse = data.items[0];
+        const responseData: App.YouTubeVideo = {
             id: video?.snippet.resourceId?.videoId ?? video.id,
             title: video.snippet.title,
             description: video.snippet.description,
@@ -36,14 +33,10 @@ export const GET: RequestHandler = async ({ url }) => {
         };
         return json(responseData);
     } else if (playlistId) {
-        console.log("playlistId");
-        console.log(playlistId);
-        let items: YouTubeVideoResponse[] = [];
-        let responseItems: YouTubeVideo[] = [];
+        let items: App.YouTubeVideoResponse[] = [];
+        let responseItems: App.YouTubeVideo[] = [];
         let nextPageToken: string | null = null;
         do {
-            console.log(`${YOUTUBE_API_URL}/playlistItems?playlistId=${playlistId}&key=${YOUTUBE_API_KEY}&part=contentDetails,snippet&maxResults=50${nextPageToken ? `&pageToken=${nextPageToken}` : ""
-                }`);
             const response = await fetch(
                 `${YOUTUBE_API_URL}/playlistItems?playlistId=${playlistId}&key=${YOUTUBE_API_KEY}&part=contentDetails,snippet&maxResults=50${nextPageToken ? `&pageToken=${nextPageToken}` : ""
                 }`,
@@ -57,7 +50,7 @@ export const GET: RequestHandler = async ({ url }) => {
             nextPageToken = data.nextPageToken;
         } while (nextPageToken);
 
-        responseItems = items.map((item: YouTubeVideoResponse) => {
+        responseItems = items.map((item: App.YouTubeVideoResponse) => {
             return {
                 id: item.snippet.resourceId?.videoId ?? "",
                 title: item.snippet.title,

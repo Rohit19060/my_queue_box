@@ -1,239 +1,194 @@
 import { convertToVideoIndexDB } from '$lib';
 import { writable } from 'svelte/store';
+import { openDatabase } from './Common';
 
 const ITEMS_PER_PAGE = 40;
-const DB_VERSION = 1;
-const DB_NAME = 'kings-library';
-const DB_VIDEO_STORE = 'videoStore';
+
+export const DB_VIDEO_STORE = 'videoStore';
 
 export enum SortOptions {
-    Title = 'titleIndex',
-    Duration = 'durationIndex',
-    Channel = 'channelIndex',
-    PublishedAt = 'publishedAtIndex'
+	Title = 'titleIndex',
+	Duration = 'durationIndex',
+	Channel = 'channelIndex',
+	PublishedAt = 'publishedAtIndex'
 }
 
-export const SortOptionDetails: { [key in SortOptions]: { keypath: string[] | string, str: string } } = {
-    [SortOptions.Title]: { keypath: 'title', str: 'Title' },
-    [SortOptions.Duration]: { keypath: ['durationSec', 'id'], str: 'Duration' },
-    [SortOptions.Channel]: { keypath: ['channelTitle', 'id'], str: 'Channel' },
-    [SortOptions.PublishedAt]: { keypath: ['publishedAtStr', 'id'], str: 'Published' }
+export const SortOptionDetails: {
+	[key in SortOptions]: { keypath: string[] | string; str: string };
+} = {
+	[SortOptions.Title]: { keypath: 'title', str: 'Title' },
+	[SortOptions.Duration]: { keypath: ['durationSec', 'id'], str: 'Duration' },
+	[SortOptions.Channel]: { keypath: ['channelTitle', 'id'], str: 'Channel' },
+	[SortOptions.PublishedAt]: { keypath: ['publishedAtStr', 'id'], str: 'Published' }
 };
 
-// export const SORT_OPTIONS = ['titleIndex', 'durationIndex', 'channelIndex', 'publishedAtIndex'];
-export const sortBy = writable<SortOptions>(SortOptions.PublishedAt);
-export const isDesc = writable<boolean>(true);
-export const dataStore = writable<VideoIndexDB[]>([]);
-export const searchDataStore = writable<VideoIndexDB[]>([]);
-export const hasMore = writable(true);
-export const currentCursorValue = writable<IDBValidKey | null>(null);
-export const videoId = writable<string>('');
-export const isModalOpen = writable(false);
-export const isPlayListModalOpen = writable(false);
-export const playlistVideos = writable<YouTubeVideo[]>([]);
-export const videoDetails = writable<YouTubeVideo | null>(null);
-export const error = writable<string | null>(null);
+export const SORT_BY = writable<SortOptions>(SortOptions.PublishedAt);
+export const IS_DESC = writable<boolean>(true);
+export const VIDEO_STORE = writable<App.VideoIndexDB[]>([]);
+export const SEARCH_VIDEO_STORE = writable<App.VideoIndexDB[]>([]);
+export const HAS_MORE = writable(true);
+export const CURRENT_CURSOR = writable<IDBValidKey | null>(null);
+export const CURRENT_VIDEO_ID = writable<App.VideoIndexDB>();
+export const IS_VIDEO_MODAL_OPEN = writable(false);
+export const IS_PLAYLIST_MODAL_OPEN = writable(false);
+export const PLAYLIST_VIDEO_LIST = writable<App.YouTubeVideo[]>([]);
+export const SEARCHED_VIDEO_DETAILS = writable<App.YouTubeVideo | null>(null);
+export const API_ERROR = writable<string | null>(null);
 
-export const page = writable(typeof window !== 'undefined' ? parseInt(localStorage.getItem('spaPage') || '0') : 0);
+export async function storeDataInIndexedDB(data: App.VideoJsonResponse[]): Promise<void> {
+	const DB = await openDatabase();
+	const TRANSACTION = DB.transaction(DB_VIDEO_STORE, 'readwrite');
+	const OBJECT_STORE = TRANSACTION.objectStore(DB_VIDEO_STORE);
+	return new Promise((resolve, reject) => {
+		data.forEach((item) => {
+			const convertedItem = convertToVideoIndexDB(item);
+			OBJECT_STORE.put(convertedItem);
+		});
+		TRANSACTION.oncomplete = () => resolve();
+		TRANSACTION.onerror = (event: Event) => reject((event.target as IDBRequest).error);
+	});
+}
 
-let dbInstance: IDBDatabase | null = null;
-let upgradeInProgress = false;
+export async function fetchPaginatedData(
+	cursorValue: IDBValidKey | null,
+	sortBy: SortOptions = SortOptions.PublishedAt,
+	isDesc: boolean = true
+): Promise<{ results: App.VideoIndexDB[]; nextCursorValue: IDBValidKey | null }> {
+	const DB = await openDatabase();
+	const TRANSACTION = DB.transaction(DB_VIDEO_STORE, 'readonly');
+	const OBJECTSTORE = TRANSACTION.objectStore(DB_VIDEO_STORE);
+	const INDEX = OBJECTSTORE.index(sortBy);
+	const DIRECTION = isDesc ? 'prev' : 'next';
+	const RESULTS: App.VideoIndexDB[] = [];
+	let counter = 0;
+	let nextCursorValue: IDBValidKey | null = null;
 
-function openDatabase(): Promise<IDBDatabase> {
-    return new Promise((resolve, reject) => {
-        if (dbInstance) {
-            resolve(dbInstance);
-            return;
-        }
-        const request = indexedDB.open(DB_NAME, DB_VERSION);
-        request.onupgradeneeded = async (event: IDBVersionChangeEvent) => {
-            const db = (event.target as IDBOpenDBRequest).result;
-            if (!upgradeInProgress) {
-                upgradeInProgress = true;
-                if (!db.objectStoreNames.contains(DB_VIDEO_STORE)) {
-                    const objectStore = db.createObjectStore(DB_VIDEO_STORE, { keyPath: 'id' }) as IDBObjectStore;
-                    Object.values(SortOptions).forEach((sortOption) => {
-                        objectStore.createIndex(sortOption, SortOptionDetails[sortOption].keypath);
-                    });
-                }
-                upgradeInProgress = false;
-            }
-        };
+	return new Promise((resolve, reject) => {
+		const OPEN_REQUEST =
+			cursorValue != null
+				? INDEX.openCursor(
+					DIRECTION == 'prev'
+						? IDBKeyRange.upperBound(cursorValue, true)
+						: IDBKeyRange.lowerBound(cursorValue, true),
+					DIRECTION
+				)
+				: INDEX.openCursor(null, DIRECTION);
 
-        request.onsuccess = (event: Event) => {
-            dbInstance = (event.target as IDBOpenDBRequest).result;
-            resolve(dbInstance);
-        };
-
-        request.onerror = (event: Event) => {
-            reject((event.target as IDBOpenDBRequest).error);
-        };
-    });
+		OPEN_REQUEST.onsuccess = (event: Event) => {
+			const cursor = (event.target as IDBRequest<IDBCursorWithValue>).result;
+			if (cursor && counter < ITEMS_PER_PAGE) {
+				RESULTS.push(cursor.value);
+				counter++;
+				nextCursorValue = cursor.key;
+				cursor.continue();
+			} else {
+				resolve({ results: RESULTS, nextCursorValue });
+			}
+		};
+		OPEN_REQUEST.onerror = (event: Event) => reject((event.target as IDBRequest).error);
+	});
 }
 
 
-// Optional: Data migration example (if structure changes)
-// const request = objectStore.openCursor();
-// request.onsuccess = (event: Event) => {
-//     const cursor = (event.target as IDBRequest<IDBCursorWithValue>).result;
-//     if (cursor) {
-//         // const video = cursor.value as VideoIndexDB;
+export async function searchVideos(
+	cursorValue: IDBValidKey | null,
+	sortBy: string = 'titleIndex',
+	isDesc: boolean = true,
+	searchText: string
+): Promise<{ results: App.VideoIndexDB[]; nextCursorValue: IDBValidKey | null }> {
+	const DB = await openDatabase();
+	const TRANSACTION = DB.transaction(DB_VIDEO_STORE, 'readonly');
+	const OBJECT_STORE = TRANSACTION.objectStore(DB_VIDEO_STORE);
+	const INDEX = OBJECT_STORE.index(sortBy);
+	const DIRECTION = isDesc ? 'prev' : 'next';
+	const RESULTS: App.VideoIndexDB[] = [];
+	let counter = 0;
+	let nextCursorValue: IDBValidKey | null = null;
+	return new Promise((resolve, reject) => {
+		const OPEN_REQUEST =
+			cursorValue != null
+				? INDEX.openCursor(
+					DIRECTION == 'prev'
+						? IDBKeyRange.upperBound(cursorValue, true)
+						: IDBKeyRange.lowerBound(cursorValue, true),
+					DIRECTION
+				)
+				: INDEX.openCursor(null, DIRECTION);
 
-//         // Perform any migration logic here (e.g., adding new fields, modifying existing ones)
-//         // Example: Adding a new field 'newField' to each record
-//         // if (!video.newField) {
-//         //     video.newField = 'defaultValue';
-//         //     cursor.update(video);  // Save the modified record back
-//         // }
-
-//         cursor.continue();
-//     }
-// };
-//     }
-
-
-export async function storeDataInIndexedDB(data: VideoJsonResponse[]): Promise<void> {
-    const db = await openDatabase();
-    const transaction = db.transaction(DB_VIDEO_STORE, 'readwrite');
-    const objectStore = transaction.objectStore(DB_VIDEO_STORE);
-    return new Promise((resolve, reject) => {
-        data.forEach((item) => {
-            const convertedItem = convertToVideoIndexDB(item);
-            objectStore.put(convertedItem);
-        });
-        transaction.oncomplete = () => {
-            resolve();
-        };
-        transaction.onerror = (event: Event) => reject((event.target as IDBRequest).error);
-    });
+		const SEARCH_TEXT = searchText.toLowerCase();
+		OPEN_REQUEST.onsuccess = (event: Event) => {
+			const CURSOR = (event.target as IDBRequest<IDBCursorWithValue>).result;
+			if (CURSOR && counter < ITEMS_PER_PAGE) {
+				const video = CURSOR.value as App.VideoIndexDB;
+				if (
+					video.title.toLowerCase().includes(SEARCH_TEXT) ||
+					video.channelTitle.toLowerCase().includes(SEARCH_TEXT)
+				) {
+					RESULTS.push(video);
+					counter++;
+				}
+				nextCursorValue = CURSOR.key;
+				CURSOR.continue();
+			} else {
+				resolve({ results: RESULTS, nextCursorValue });
+			}
+		};
+		OPEN_REQUEST.onerror = (event: Event) => reject((event.target as IDBRequest).error);
+	});
 }
 
 
-export async function fetchPaginatedData(cursorValue: IDBValidKey | null, sortBy: SortOptions = SortOptions.PublishedAt, isDesc: boolean = true): Promise<{ results: VideoIndexDB[], nextCursorValue: IDBValidKey | null }> {
-    const db = await openDatabase();
-    const transaction = db.transaction(DB_VIDEO_STORE, 'readonly');
-    const objectStore = transaction.objectStore(DB_VIDEO_STORE);
-    const index = objectStore.index(sortBy);
-
-    const direction = isDesc ? 'prev' : 'next';
-    const results: VideoIndexDB[] = [];
-    let counter = 0;
-    let nextCursorValue: IDBValidKey | null = null;
-
-    return new Promise((resolve, reject) => {
-        const openRequest = cursorValue != null
-            ? index.openCursor(direction == 'prev' ? IDBKeyRange.upperBound(cursorValue, true) : IDBKeyRange.lowerBound(cursorValue, true), direction)
-            : index.openCursor(null, direction);
-
-        openRequest.onsuccess = (event: Event) => {
-            const cursor = (event.target as IDBRequest<IDBCursorWithValue>).result;
-            if (cursor && counter < ITEMS_PER_PAGE) {
-                results.push(cursor.value);
-                counter++;
-                nextCursorValue = cursor.key;
-                cursor.continue();
-            } else {
-                resolve({ results, nextCursorValue });
-            }
-        };
-
-        openRequest.onerror = (event: Event) => {
-            reject((event.target as IDBRequest).error);
-        };
-    });
+export async function addVideoToIndexDB(video: App.YouTubeVideo): Promise<App.VideoIndexDB | null> {
+	let tempVideo = video;
+	if (!tempVideo.duration) {
+		const response = await fetch(`/api/youtube?video=${encodeURIComponent(tempVideo.id)}`);
+		const data = await response.json();
+		if (!response.ok) {
+			throw new Error(data.error);
+		}
+		tempVideo = data;
+	}
+	const DB = await openDatabase();
+	const TRANSACTION = DB.transaction(DB_VIDEO_STORE, 'readwrite');
+	const OBJECT_STORE = TRANSACTION.objectStore(DB_VIDEO_STORE);
+	return new Promise((resolve, reject) => {
+		const CONVERTED_VIDEO = convertToVideoIndexDB(video);
+		const REQUEST = OBJECT_STORE.put(CONVERTED_VIDEO);
+		REQUEST.onsuccess = () => resolve(CONVERTED_VIDEO);
+		REQUEST.onerror = (event: Event) => reject((event.target as IDBRequest).error);
+	});
 }
-
-
-export async function addVideoToIndexDB(video: YouTubeVideo) {
-    if (!video) {
-        return;
-    }
-    const db = await openDatabase();
-    const transaction = db.transaction(DB_VIDEO_STORE, 'readwrite');
-    const objectStore = transaction.objectStore(DB_VIDEO_STORE);
-    return new Promise((resolve, reject) => {
-        if (Array.isArray(video)) {
-            const videos = video.map((item) => convertToVideoIndexDB(item));
-            const request = objectStore.put(videos);
-            request.onsuccess = () => resolve(video);
-            request.onerror = (event: Event) =>
-                reject((event.target as IDBRequest).error);
-        } else {
-            const request = objectStore.put(convertToVideoIndexDB(video));
-            request.onsuccess = () => resolve(video);
-            request.onerror = (event: Event) =>
-                reject((event.target as IDBRequest).error);
-
-        }
-    });
-}
-
 
 export async function removeVideoFromIndexDB(id: string) {
-    const db = await openDatabase();
-    const transaction = db.transaction(DB_VIDEO_STORE, 'readwrite');
-    const objectStore = transaction.objectStore(DB_VIDEO_STORE);
-    return new Promise((resolve, reject) => {
-        const request = objectStore.delete(id);
-        request.onsuccess = () => resolve({ "id": id, "success": true });
-        request.onerror = (event: Event) => {
-            reject((event.target as IDBRequest).error);
-        };
-    });
+	const DB = await openDatabase();
+	const TRANSACTION = DB.transaction(DB_VIDEO_STORE, 'readwrite');
+	const OBJECT_STORE = TRANSACTION.objectStore(DB_VIDEO_STORE);
+	return new Promise((resolve, reject) => {
+		const REQUEST = OBJECT_STORE.delete(id);
+		REQUEST.onsuccess = () => resolve({ id: id, success: true });
+		REQUEST.onerror = (event: Event) => reject((event.target as IDBRequest).error);
+	});
 }
 
-
-export async function searchVideos(cursorValue: IDBValidKey | null, sortBy: string = 'titleIndex', isDesc: boolean = true, searchText: string): Promise<{ results: VideoIndexDB[], nextCursorValue: IDBValidKey | null }> {
-    const db = await openDatabase();
-    const transaction = db.transaction(DB_VIDEO_STORE, 'readonly');
-    const objectStore = transaction.objectStore(DB_VIDEO_STORE);
-    const index = objectStore.index(sortBy);
-
-    const direction = isDesc ? 'prev' : 'next';
-    const results: VideoIndexDB[] = [];
-    let counter = 0;
-    let nextCursorValue: IDBValidKey | null = null;
-
-    return new Promise((resolve, reject) => {
-        const openRequest = cursorValue != null
-            ? index.openCursor(direction == 'prev' ? IDBKeyRange.upperBound(cursorValue, true) : IDBKeyRange.lowerBound(cursorValue, true), direction)
-            : index.openCursor(null, direction);
-
-        const searchTextLower = searchText.toLowerCase();
-        openRequest.onsuccess = (event: Event) => {
-            const cursor = (event.target as IDBRequest<IDBCursorWithValue>).result;
-            if (cursor && counter < ITEMS_PER_PAGE) {
-                const video = cursor.value as VideoIndexDB;
-                if (video.title.toLowerCase().includes(searchTextLower) || video.channelTitle.toLowerCase().includes(searchTextLower)) {
-                    results.push(video);
-                    counter++;
-                }
-                nextCursorValue = cursor.key;
-                cursor.continue();
-            } else {
-                resolve({ results, nextCursorValue });
-            }
-        };
-
-        openRequest.onerror = (event: Event) => {
-            reject((event.target as IDBRequest).error);
-        };
-    });
-}
-
-export async function getIndexReverseList() {
-    const db = await openDatabase();
-    const transaction = db.transaction(DB_VIDEO_STORE, 'readonly');
-    const objectStore = transaction.objectStore(DB_VIDEO_STORE);
-
-    return new Promise((resolve, reject) => {
-        const openRequest = objectStore.getAll();
-        openRequest.onsuccess = () => {
-            resolve(openRequest.result);
-        };
-
-        openRequest.onerror = (event: Event) => {
-            reject((event.target as IDBRequest).error);
-        };
-    });
+export async function setVideoAsWatched(id: string, watched: boolean): Promise<void> {
+	const DB = await openDatabase();
+	const TRANSACTION = DB.transaction(DB_VIDEO_STORE, 'readwrite');
+	const OBJECT_STORE = TRANSACTION.objectStore(DB_VIDEO_STORE);
+	return new Promise((resolve, reject) => {
+		const REQUEST = OBJECT_STORE.get(id);
+		REQUEST.onsuccess = (event: Event) => {
+			const VIDEO = (event.target as IDBRequest).result;
+			if (VIDEO) {
+				VIDEO.watched = watched;
+				const putRequest = OBJECT_STORE.put(VIDEO);
+				putRequest.onsuccess = () => resolve();
+				putRequest.onerror = (event: Event) =>
+					reject((event.target as IDBRequest).error);
+			} else {
+				reject(new Error(`Video with id ${id} not found.`));
+			}
+		};
+		REQUEST.onerror = (event: Event) =>
+			reject((event.target as IDBRequest).error);
+	});
 }

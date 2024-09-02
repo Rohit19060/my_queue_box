@@ -1,15 +1,15 @@
 <script>
 	import { CurrentPage } from '$lib';
-	import { page } from '../lib/stores/videoDB';
-	import Home from './components/home.svelte';
-	import Read from './components/read.svelte';
-	import Watch from './components/watch.svelte';
+	import { PAGE } from '$lib/stores/SpaStore';
+	import Home from './components/Home.svelte';
+	import Read from './components/Read.svelte';
+	import Watch from './components/Watch.svelte';
 </script>
 
-{#if $page == CurrentPage.Home}
+{#if $PAGE == CurrentPage.Home}
 	<Home />
-{:else if $page == CurrentPage.Read}
+{:else if $PAGE == CurrentPage.Read}
 	<Read />
-{:else if $page == CurrentPage.Watch}
+{:else if $PAGE == CurrentPage.Watch}
 	<Watch />
 {/if}
