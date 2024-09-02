@@ -12,7 +12,7 @@
 		"lint": "prettier --check . && eslint .",
 		"format": "prettier --write .",
 		"test:integration": "playwright test",
-		"test:unit": "vitest"
+		"test:unit": "vitest run src/index.test.ts src/lib/index.test.ts src/lib/stores/stores.test.ts src/routes/components/components.test.ts src/routes/api/youtube/+server.test.ts"
 	},
 	"devDependencies": {
 		"@playwright/test": "^1.46.1",
