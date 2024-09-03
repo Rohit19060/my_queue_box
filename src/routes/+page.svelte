@@ -2,8 +2,8 @@
 	import { CurrentPage } from '$lib';
 	import { PAGE } from '$lib/stores/SpaStore';
 	import HomePage from './components/HomePage.svelte';
-	import Read from './components/Read.svelte';
-	import Watch from './components/Watch.svelte';
+	import Read from './components/ReadPage.svelte';
+	import Watch from './components/WatchPage.svelte';
 	import YouTubeModal from './components/watch/YouTubeModal.svelte';
 </script>
 
