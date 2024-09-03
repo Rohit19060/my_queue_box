@@ -1,8 +1,9 @@
+import { DB_READ_STORE } from "./ReadDB";
 import { DB_VIDEO_STORE, SortOptionDetails, SortOptions } from "./VideoDB";
 
 let dbInstance: IDBDatabase | null = null;
 let upgradeInProgress = false;
-const DB_VERSION = 1;
+const DB_VERSION = 2;
 const DB_NAME = 'kings-library';
 
 export function openDatabase(): Promise<IDBDatabase> {
@@ -23,6 +24,11 @@ export function openDatabase(): Promise<IDBDatabase> {
                     Object.values(SortOptions).forEach((sortOption) => {
                         objectStore.createIndex(sortOption, SortOptionDetails[sortOption].keypath);
                     });
+                }
+                if (!db.objectStoreNames.contains(DB_READ_STORE)) {
+                    db.createObjectStore(DB_READ_STORE, {
+                        keyPath: 'id'
+                    }) as IDBObjectStore;
                 }
                 upgradeInProgress = false;
             }

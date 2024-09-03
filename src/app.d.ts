@@ -77,6 +77,13 @@ declare global {
 			type: YouTubeIdType;
 			id: string;
 		}
+
+		interface ReadIndexDB {
+			id: number;
+			title: string;
+			description: string;
+			url: string;
+		}
 	}
 }
 
