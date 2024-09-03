@@ -13,7 +13,7 @@
 		<div>
 			<h3 class="text-lg font-semibold">{label}</h3>
 			<p class="text-sm text-muted-foreground">
-				You have <span class="text-orange-600">{pendingCount}</span>/{totalCount} {undoneLabel}
+				You have <span class="font-bold text-orange-600">{pendingCount}</span>/{totalCount} {undoneLabel}
 			</p>
 		</div>
 		<Button onclick={() => setSpaPage(CurrentPage.Watch)}></Button>

@@ -1,17 +1,27 @@
-<script>
+<script lang="ts">
 	import { CurrentPage, setSpaPage } from '$lib';
-	import { totalVideoCountFn } from '$lib/stores/SpaStore';
+	import { totalAndWatchedVideoCountFn } from '$lib/stores/SpaStore';
+	import { topVideos } from '$lib/stores/VideoDB';
 	import { onMount } from 'svelte';
 	import BookmarkCard from './home/BookmarkCard.svelte';
 	import Button from './home/Button.svelte';
 	import CountAnalytics from './home/CountAnalytics.svelte';
-	import VideoCard from './home/VideoCard.svelte';
+	import Video from './watch/Video.svelte';
 
 	let totalVideoCount = 0;
+	let watchedVideoCount = 0;
+	let videos: App.VideoIndexDB[] = [];
 
 	onMount(async () => {
-		totalVideoCount = await totalVideoCountFn();
+		let res = await totalAndWatchedVideoCountFn();
+		totalVideoCount = res.total;
+		watchedVideoCount = res.watched;
+		videos = await topVideos();
 	});
+
+	function toggleWatch(video: App.VideoIndexDB) {
+		videos = videos.map((y) => (y.id === video.id ? { ...video, watched: !video.watched } : y));
+	}
 </script>
 
 <div class="flex flex-col min-h-[100dvh]">
@@ -20,9 +30,9 @@
 			<div class="grid gap-10 sm:grid-cols-2">
 				<CountAnalytics
 					totalCount={totalVideoCount}
-					pendingCount={124}
-					label="Bookmarks"
-					undoneLabel="Unopened Bookmarks"
+					pendingCount={watchedVideoCount}
+					label="Videos"
+					undoneLabel="Unopened Videos"
 				/>
 				<CountAnalytics
 					totalCount={456}
@@ -63,17 +73,12 @@
 					<h3 class="text-lg font-semibold">Videos</h3>
 					<Button onclick={() => setSpaPage(CurrentPage.Watch)}></Button>
 				</div>
-				<div class="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3">
-					<VideoCard
-						title="Tailwind CSS Crash Course"
-						description="Tailwind CSS is a utility-first CSS framework for rapidly building custom user interfaces."
-						timeAgo="1 day ago"
-					></VideoCard>
-					<VideoCard
-						title="Tailwind CSS Crash Course"
-						description="Tailwind CSS is a utility-first CSS framework for rapidly building custom user interfaces."
-						timeAgo="1 day ago"
-					></VideoCard>
+				<div
+					class="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5"
+				>
+					{#each videos as video}
+						<Video {video} afterToggleWatch={(x) => toggleWatch(x)} />
+					{/each}
 				</div>
 			</div>
 		</div>

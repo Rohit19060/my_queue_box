@@ -11,7 +11,8 @@
 	import UnWatched from '../Svgs/UnWatched.svelte';
 	import Watched from '../Svgs/Watched.svelte';
 
-	export let item: App.VideoIndexDB;
+	export let video: App.VideoIndexDB;
+	export let afterToggleWatch: (video: App.VideoIndexDB) => void = () => {};
 
 	async function removeVideo(id: string) {
 		try {
@@ -25,22 +26,25 @@
 
 	async function openModal() {
 		try {
-			await setVideoAsWatched(item.id, true);
-			VIDEO_STORE.update((x) => x.map((y) => (y.id === item.id ? { ...item, watched: true } : y)));
+			await setVideoAsWatched(video.id, true);
+			VIDEO_STORE.update((x) =>
+				x.map((y) => (y.id === video.id ? { ...video, watched: true } : y))
+			);
 		} catch (e) {
 			console.error('Error setting video as watched', e);
 		}
-		CURRENT_VIDEO_ID.set(item);
+		CURRENT_VIDEO_ID.set(video);
 		IS_VIDEO_MODAL_OPEN.set(true);
 	}
 
 	async function toggleWatch(event: MouseEvent) {
 		event.stopPropagation(); // Prevents the parent button click event
 		try {
-			await setVideoAsWatched(item.id, !item.watched);
+			await setVideoAsWatched(video.id, !video.watched);
 			VIDEO_STORE.update((x) =>
-				x.map((y) => (y.id === item.id ? { ...item, watched: !item.watched } : y))
+				x.map((y) => (y.id === video.id ? { ...video, watched: !video.watched } : y))
 			);
+			afterToggleWatch(video);
 		} catch (e) {
 			console.error('Error setting video as watched', e);
 		}
@@ -51,14 +55,14 @@
 	<button on:click={openModal}>
 		<div class="relative">
 			<img
-				src="https://i.ytimg.com/vi/{item.id}/mqdefault.jpg"
-				alt={item.title}
+				src="https://i.ytimg.com/vi/{video.id}/mqdefault.jpg"
+				alt={video.title}
 				class="relative flex-grow object-cover w-full transition-opacity rounded-xl aspect-video group-hover:opacity-80"
 			/>
 			<div class="absolute px-2 py-1 text-sm text-white rounded-md bottom-2 left-2 bg-black/50">
-				{timeAgo(item.publishedAt)}
+				{timeAgo(video.publishedAt)}
 			</div>
-			{#if item.watched}
+			{#if video.watched}
 				<button
 					class="absolute p-1.5 py-1 text-sm text-white rounded-md top-2 right-2 bg-black/60"
 					on:click={toggleWatch}
@@ -74,24 +78,24 @@
 				</button>
 			{/if}
 			<div class="absolute px-2 py-1 text-sm text-white rounded-md bottom-2 right-2 bg-black/50">
-				{secondsToHumanReadable(item.durationSec)}
+				{secondsToHumanReadable(video.durationSec)}
 			</div>
 		</div>
 	</button>
 	<div class="flex flex-col mt-3">
-		<a href="https://www.youtube.com/watch?v={item.id}" target="_blank" rel="noopener noreferrer">
-			<h3 class="font-medium capitalize line-clamp-2 min-h-12">{item.title}</h3>
+		<a href="https://www.youtube.com/watch?v={video.id}" target="_blank" rel="noopener noreferrer">
+			<h3 class="font-medium capitalize line-clamp-2 min-h-12">{video.title}</h3>
 		</a>
 		<div class="flex items-center justify-between mt-2">
 			<a
-				href={`https://www.youtube.com/channel/${item.channelId}`}
+				href={`https://www.youtube.com/channel/${video.channelId}`}
 				rel="noopener noreferrer"
 				target="_blank"
 				class="capitalize"
 			>
-				{item.channelTitle}</a
+				{video.channelTitle}</a
 			>
-			<Button label="Remove" onclick={() => removeVideo(item.id)} className="bg-red-500" />
+			<Button label="Remove" onclick={() => removeVideo(video.id)} className="bg-red-500" />
 		</div>
 	</div>
 </div>

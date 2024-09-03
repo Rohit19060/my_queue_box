@@ -4,6 +4,7 @@
 	import Home from './components/Home.svelte';
 	import Read from './components/Read.svelte';
 	import Watch from './components/Watch.svelte';
+	import YouTubeModal from './components/watch/YouTubeModal.svelte';
 </script>
 
 {#if $PAGE == CurrentPage.Home}
@@ -13,3 +14,4 @@
 {:else if $PAGE == CurrentPage.Watch}
 	<Watch />
 {/if}
+<YouTubeModal />

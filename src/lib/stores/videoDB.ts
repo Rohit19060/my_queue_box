@@ -137,6 +137,27 @@ export async function searchVideos(
 	});
 }
 
+export async function topVideos(): Promise<App.VideoIndexDB[]> {
+	const DB = await openDatabase();
+	const TRANSACTION = DB.transaction(DB_VIDEO_STORE, 'readonly');
+	const OBJECT_STORE = TRANSACTION.objectStore(DB_VIDEO_STORE);
+	const INDEX = OBJECT_STORE.index('publishedAtIndex');
+	const RESULTS: App.VideoIndexDB[] = [];
+	return new Promise((resolve, reject) => {
+		const OPEN_REQUEST = INDEX.openCursor(null, 'prev');
+		OPEN_REQUEST.onsuccess = (event: Event) => {
+			const CURSOR = (event.target as IDBRequest<IDBCursorWithValue>).result;
+			if (CURSOR && RESULTS.length < 5) {
+				RESULTS.push(CURSOR.value);
+				CURSOR.continue();
+			} else {
+				resolve(RESULTS);
+			}
+		};
+		OPEN_REQUEST.onerror = (event: Event) => reject((event.target as IDBRequest).error);
+	});
+}
+
 
 export async function addVideoToIndexDB(video: App.YouTubeVideo): Promise<App.VideoIndexDB | null> {
 	let tempVideo = video;
