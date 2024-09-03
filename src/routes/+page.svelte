@@ -1,14 +1,14 @@
 <script>
 	import { CurrentPage } from '$lib';
 	import { PAGE } from '$lib/stores/SpaStore';
-	import Home from './components/Home.svelte';
+	import HomePage from './components/HomePage.svelte';
 	import Read from './components/Read.svelte';
 	import Watch from './components/Watch.svelte';
 	import YouTubeModal from './components/watch/YouTubeModal.svelte';
 </script>
 
 {#if $PAGE == CurrentPage.Home}
-	<Home />
+	<HomePage />
 {:else if $PAGE == CurrentPage.Read}
 	<Read />
 {:else if $PAGE == CurrentPage.Watch}
