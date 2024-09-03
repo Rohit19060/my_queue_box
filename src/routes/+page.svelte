@@ -1,6 +1,6 @@
-<script>
+<script lang="ts">
 	import { CurrentPage } from '$lib';
-	import { PAGE } from '$lib/stores/SpaStore';
+	import { PAGE } from '$lib/stores/MainStore';
 	import HomePage from './components/HomePage.svelte';
 	import Read from './components/ReadPage.svelte';
 	import Watch from './components/WatchPage.svelte';

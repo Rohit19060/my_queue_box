@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { CurrentPage, setSpaPage } from '$lib';
+	import { totalAndWatchedVideoCountFn } from '$lib/stores/MainStore';
 	import { topReads, totalReadCount } from '$lib/stores/ReadDB';
-	import { totalAndWatchedVideoCountFn } from '$lib/stores/SpaStore';
 	import { topVideos } from '$lib/stores/VideoDB';
 	import { onMount } from 'svelte';
 	import BookmarkCard from './home/BookmarkCard.svelte';

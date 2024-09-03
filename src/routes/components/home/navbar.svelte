@@ -1,6 +1,6 @@
 <script>
 	import { CurrentPage, setSpaPage } from '$lib';
-	import { PAGE } from '$lib/stores/SpaStore';
+	import { PAGE } from '$lib/stores/MainStore';
 	import AppIcon from '../Svgs/AppIcon.svelte';
 </script>
 

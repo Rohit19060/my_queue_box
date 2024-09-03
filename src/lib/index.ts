@@ -1,4 +1,4 @@
-import { PAGE } from "./stores/SpaStore";
+import { PAGE } from "./stores/MainStore";
 import { CURRENT_CURSOR, HAS_MORE, VIDEO_STORE } from "./stores/VideoDB";
 
 export function dateToHumanReadable(date: Date): string {
