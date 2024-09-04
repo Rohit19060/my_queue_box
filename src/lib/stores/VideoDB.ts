@@ -173,7 +173,7 @@ export async function addVideoToIndexDB(video: App.YouTubeVideo): Promise<App.Vi
 	const TRANSACTION = DB.transaction(DB_VIDEO_STORE, 'readwrite');
 	const OBJECT_STORE = TRANSACTION.objectStore(DB_VIDEO_STORE);
 	return new Promise((resolve, reject) => {
-		const CONVERTED_VIDEO = convertToVideoIndexDB(video);
+		const CONVERTED_VIDEO = convertToVideoIndexDB(tempVideo);
 		const REQUEST = OBJECT_STORE.put(CONVERTED_VIDEO);
 		REQUEST.onsuccess = () => resolve(CONVERTED_VIDEO);
 		REQUEST.onerror = (event: Event) => reject((event.target as IDBRequest).error);

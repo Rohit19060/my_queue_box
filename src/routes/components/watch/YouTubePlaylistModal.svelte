@@ -29,7 +29,7 @@
 				}
 			}
 			PLAYLIST_VIDEO_LIST.set([]);
-			VIDEO_STORE.update((x) => [...x, ...videos]);
+			VIDEO_STORE.update((x) => [...videos, ...x]);
 			closeModal();
 		} catch (e) {
 			console.error('Error adding video to indexDB', e);
