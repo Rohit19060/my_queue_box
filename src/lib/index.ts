@@ -49,21 +49,24 @@ export function timeAgo(date: Date): string {
 	}
 }
 
-
 export function isoDurationToSeconds(duration: string): number {
-	const regex = /^PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?$/;
+	// Extended regex to support days as well
+	const regex = /^P(?:(\d+)D)?T(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?$/;
 	const matches = regex.exec(duration);
 
 	if (!matches) {
+		console.log(duration);
 		throw new Error('Invalid ISO 8601 duration format');
 	}
 
-	const hours = parseInt(matches[1] || '0', 10);
-	const minutes = parseInt(matches[2] || '0', 10);
-	const seconds = parseInt(matches[3] || '0', 10);
+	const days = parseInt(matches[1] || '0', 10);
+	const hours = parseInt(matches[2] || '0', 10);
+	const minutes = parseInt(matches[3] || '0', 10);
+	const seconds = parseInt(matches[4] || '0', 10);
 
-	return (hours * 3600) + (minutes * 60) + seconds;
+	return (days * 86400) + (hours * 3600) + (minutes * 60) + seconds;
 }
+
 
 export function convertToVideoIndexDB(videoResponse: App.VideoJsonResponse | App.YouTubeVideo): App.VideoIndexDB {
 	if ('details' in videoResponse) {
