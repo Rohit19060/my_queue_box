@@ -10,7 +10,7 @@
 	<div class="flex justify-evenly">
 		<button class="flex items-center" on:click={() => setSpaPage(CurrentPage.Home)}>
 			<AppIcon />
-			<span class="ml-5 text-2xl font-semibold">King's Library</span>
+			<span class="ml-5 text-2xl font-semibold">My Queue Box</span>
 		</button>
 	</div>
 	<nav class="flex gap-5 mt-4 mb-2 text-xl">
@@ -22,7 +22,7 @@
 			Home
 			<div
 				class="w-full border-b-4 {$PAGE === CurrentPage.Home
-					? 'border-orange-400'
+					? 'border-black'
 					: 'border-transparent'}  rounded-b-md"
 			></div>
 		</button>
@@ -34,7 +34,7 @@
 			Watch
 			<div
 				class="w-full border-b-4 {$PAGE === CurrentPage.Watch
-					? 'border-orange-400'
+					? 'border-black'
 					: 'border-transparent'}  rounded-b-md"
 			></div>
 		</button>
@@ -46,7 +46,7 @@
 			Read
 			<div
 				class="w-full border-b-4 {$PAGE === CurrentPage.Read
-					? 'border-orange-400'
+					? 'border-black'
 					: 'border-transparent'}  rounded-b-md"
 			></div>
 		</button>

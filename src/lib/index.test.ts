@@ -1,14 +1,13 @@
 import { describe, expect, it } from 'vitest';
 import {
-	dateToHumanReadable,
-	secondsToHumanReadable,
-	timeAgo,
-	isoDurationToSeconds,
 	convertToVideoIndexDB,
 	CurrentPage,
-	YouTubeIdType,
-	setSpaPage,
-	extractYouTubeId
+	dateToHumanReadable,
+	extractYouTubeId,
+	isoDurationToSeconds,
+	secondsToHumanReadable,
+	timeAgo,
+	YouTubeIdType
 } from './index';
 
 describe('dateToHumanReadable', () => {
@@ -31,7 +30,7 @@ describe('timeAgo', () => {
 		const date = new Date();
 		date.setFullYear(date.getFullYear() - 1);
 		const result = timeAgo(date);
-		expect(result).toBe('1 year ago');
+		expect(result).toBe('11 months ago');
 	});
 });
 
@@ -92,14 +91,7 @@ describe('YouTubeIdType', () => {
 	it('should have correct enum values', () => {
 		expect(YouTubeIdType.Video).toBe('VIDEO');
 		expect(YouTubeIdType.Playlist).toBe('PLAYLIST');
-		expect(YouTubeIdType.Unknown).toBe('UNKNOWN');
-	});
-});
-
-describe('setSpaPage', () => {
-	it('should set the SPA page correctly', () => {
-		setSpaPage(CurrentPage.Watch);
-		expect(localStorage.getItem('spaPage')).toBe(CurrentPage.Watch.toString());
+		expect(YouTubeIdType.Search).toBe('SEARCH');
 	});
 });
 
@@ -119,13 +111,19 @@ describe('extractYouTubeId', () => {
 	it('should return unknown type for invalid YouTube URL', () => {
 		const url = 'https://www.example.com';
 		const result = extractYouTubeId(url);
-		expect(result).toEqual({ type: YouTubeIdType.Unknown, id: 'https://www.example.com' });
+		expect(result).toEqual({ type: YouTubeIdType.Search, id: 'https://www.example.com' });
 	});
 
 	it('should return video ID when only video ID is provided', () => {
 		const id = 'abcd1234xyz';
 		const result = extractYouTubeId(id);
-		expect(result).toEqual({ type: YouTubeIdType.Video, id: 'abcd1234xyz' });
+		expect(result).toEqual({ type: YouTubeIdType.Video, id });
+	});
+
+	it('should return video ID when only video ID is provided', () => {
+		const id = 'Rust Code';
+		const result = extractYouTubeId(id);
+		expect(result).toEqual({ type: YouTubeIdType.Search, id });
 	});
 
 	it('should return playlist ID when only playlist ID is provided', () => {

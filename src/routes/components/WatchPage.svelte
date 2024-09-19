@@ -4,6 +4,7 @@
 		fetchPaginatedData,
 		HAS_MORE,
 		IS_DESC,
+		SEARCH_TEXT,
 		SEARCHED_VIDEO_DETAILS,
 		searchVideos,
 		SORT_BY,
@@ -12,7 +13,7 @@
 	} from '$lib/stores/VideoDB';
 	import { onMount } from 'svelte';
 	import { get } from 'svelte/store';
-	import VideoDetails from './watch/SearchedVideoDetails.svelte';
+	import VideoDetails from './watch/VideoDetails.svelte';
 
 	import SearchVideo from './watch/SearchVideoForm.svelte';
 	import UploadJson from './watch/UploadJsonFile.svelte';
@@ -111,6 +112,7 @@
 
 	async function searchVideo(str: string, isScroll: boolean = false) {
 		searchText = str;
+		SEARCH_TEXT.set(str);
 		if (str.length === 0) {
 			reset($SORT_BY, false);
 			return;
@@ -148,7 +150,7 @@
 	<SearchVideo />
 	<UploadJson />
 </div>
-<div class="mx-auto ">
+<div class="mx-auto">
 	<VideoDetails videoDetails={$SEARCHED_VIDEO_DETAILS} />
 </div>
 <VideosSearch onSort={(x) => reset(x)} onSearch={(y) => searchVideo(y)} />

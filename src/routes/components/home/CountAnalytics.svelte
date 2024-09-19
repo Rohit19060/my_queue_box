@@ -3,8 +3,8 @@
 
 	export let totalCount = 0;
 	export let pendingCount = 0;
-	export let label = 'Bookmarks';
-	export let undoneLabel = 'Pending Bookmarks';
+	export let label = 'Videos';
+	export let undoneLabel = 'Watched';
 	export let onclick = () => {};
 </script>
 
@@ -13,8 +13,7 @@
 		<div>
 			<h3 class="text-lg font-semibold">{label}</h3>
 			<p class="text-sm text-muted-foreground">
-				You have <span class="font-bold text-orange-600">{pendingCount}</span>/{totalCount}
-				{undoneLabel}
+				You have <span class="font-bold text-black">{pendingCount}</span> out of {totalCount} yet to be {undoneLabel}
 			</p>
 		</div>
 		<Button {onclick}></Button>

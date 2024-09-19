@@ -25,12 +25,13 @@ export const SortOptionDetails: {
 export const SORT_BY = writable<SortOptions>(SortOptions.PublishedAt);
 export const IS_DESC = writable<boolean>(true);
 export const VIDEO_STORE = writable<App.VideoIndexDB[]>([]);
-export const SEARCH_VIDEO_STORE = writable<App.VideoIndexDB[]>([]);
+export const SEARCH_TEXT = writable<string>('');
 export const HAS_MORE = writable(true);
 export const CURRENT_CURSOR = writable<IDBValidKey | null>(null);
 export const CURRENT_VIDEO_ID = writable<App.VideoIndexDB>();
 export const IS_VIDEO_MODAL_OPEN = writable(false);
 export const IS_PLAYLIST_MODAL_OPEN = writable(false);
+export const IS_PLAYLIST_MODAL_TYPE = writable<string>("PLAYLIST");
 export const PLAYLIST_VIDEO_LIST = writable<App.YouTubeVideo[]>([]);
 export const SEARCHED_VIDEO_DETAILS = writable<App.YouTubeVideo | null>(null);
 export const API_ERROR = writable<string | null>(null);

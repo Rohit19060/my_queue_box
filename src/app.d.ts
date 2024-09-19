@@ -2,6 +2,12 @@
 // for information about these interfaces
 declare global {
 	namespace App {
+		interface ReadIndexDB {
+			id: number;
+			title: string;
+			description: string;
+			url: string;
+		}
 		interface VideoIndexDB {
 			id: string;
 			title: string;
@@ -36,28 +42,9 @@ declare global {
 		}
 
 
-		interface YouTubeVideoResponse {
-			id: string;
-			snippet: {
-				title: string;
-				channelId: string;
-				channelTitle: string;
-				description: string;
-				categoryId: string;
-				tags: string[];
-				publishedAt: string;
-				videoOwnerChannelTitle: string | null;
-				videoOwnerChannelId: string | null;
-				resourceId: {
-					videoId: string | null;
-				} | null;
-			};
-			contentDetails: {
-				duration: string;
-				videoId: string | null;
-				videoPublishedAt: string | null;
-			};
-		}
+		type AfterSort = (sort: SortOptions) => void;
+
+		type OnSearch = (search: string) => void;
 
 		interface YouTubeVideo {
 			id: string;
@@ -70,20 +57,62 @@ declare global {
 			tags: string[];
 			publishedAt: string;
 		}
-		type AfterSort = (sort: SortOptions) => void;
-		type OnSearch = (search: string) => void;
 
-		interface YouTubeIdResult {
-			type: YouTubeIdType;
+		interface VideoResult {
 			id: string;
+			snippet: {
+				title: string;
+				description: string;
+				publishedAt: string;
+				channelTitle: string;
+				channelId: string;
+				tags?: string[];
+				videoOwnerChannelTitle?: string;
+				videoOwnerChannelId?: string;
+				categoryId?: string;
+			};
+			contentDetails?: {
+				duration: string;
+			};
+			statistics?: {
+				viewCount: string;
+				likeCount: string;
+			};
 		}
 
-		interface ReadIndexDB {
-			id: number;
-			title: string;
-			description: string;
-			url: string;
+		interface PlaylistItem {
+			snippet: {
+				title: string;
+				description: string;
+				videoOwnerChannelTitle: string;
+				videoOwnerChannelId: string;
+				resourceId: {
+					kind: string;
+					videoId: string;
+				}
+			};
+			contentDetails: {
+				videoId: string;
+				videoPublishedAt: string;
+			};
+
 		}
+
+		interface SearchResult {
+			id: {
+				videoId: string;
+			};
+			snippet: {
+				title: string;
+				description: string;
+				channelTitle: string;
+				channelId: string;
+				publishedAt: string;
+			};
+		}
+
+
+
 	}
 }
 

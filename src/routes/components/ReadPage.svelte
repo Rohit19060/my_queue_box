@@ -30,11 +30,13 @@
 	}
 </script>
 
-<div class="m-4 text-center">
-	{#if !$IS_ADD_MODAL}
-		<Button onclick={openModal} label="Add Read" />
-	{/if}
-</div>
+{#if $READ_STORE.length > 0}
+	<div class="m-4 text-center">
+		{#if !$IS_ADD_MODAL}
+			<Button onclick={openModal} label="Add Read" />
+		{/if}
+	</div>
+{/if}
 <div>
 	<div class="mx-auto w-fit">
 		{#each $READ_STORE as item}
@@ -52,7 +54,16 @@
 				<button on:click={() => removeRead(item.id)}><TrashIcon /></button>
 			</div>
 		{:else}
-			<p>No Reads found</p>
+			<div
+				class="flex flex-col items-center justify-center min-h-[400px] p-4 text-center bg-muted rounded-lg"
+			>
+				<h2 class="mb-2 text-2xl font-bold">No Reads Found</h2>
+				<p class="max-w-sm mt-4 mb-20 text-muted-foreground">
+					It looks like you haven't added any read links to your reading list yet. Start building
+					your library today!
+				</p>
+				<Button onclick={openModal} label="Add Your first Read" />
+			</div>
 		{/each}
 	</div>
 </div>

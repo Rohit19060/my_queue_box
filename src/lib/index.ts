@@ -55,7 +55,6 @@ export function isoDurationToSeconds(duration: string): number {
 	const matches = regex.exec(duration);
 
 	if (!matches) {
-		console.log(duration);
 		throw new Error('Invalid ISO 8601 duration format');
 	}
 
@@ -113,7 +112,7 @@ export enum CurrentPage {
 export enum YouTubeIdType {
 	Video = "VIDEO",
 	Playlist = "PLAYLIST",
-	Unknown = "UNKNOWN"
+	Search = "SEARCH"
 }
 
 export function setSpaPage(x: CurrentPage) {
@@ -124,26 +123,41 @@ export function setSpaPage(x: CurrentPage) {
 	localStorage.setItem('spaPage', x.toString());
 }
 
-
 export function extractYouTubeId(urlOrId: string): App.YouTubeIdResult {
-	// Regular expression to match YouTube video IDs
-	const videoIdExp = /^(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/(?:[^\\n\s]+\/\S+\/|(?:v|e(?:mbed)?)\/|\S*?[?&]v=)|youtu\.be\/)([a-zA-Z0-9_-]{11})/i;
+	// Regular expression to match YouTube video IDs from full URLs
+	const videoUrlExp = /^(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/(?:watch\?v=|embed\/|v\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/i;
 
-	// Regular expression to match YouTube playlist IDs
-	const playlistIdExp = /(?:list=)?([a-zA-Z0-9_-]+)$/;
+	// Regular expression to match YouTube playlist IDs from full URLs
+	const playlistUrlExp = /^(?:https?:\/\/)?(?:www\.)?youtube\.com\/playlist\?list=([a-zA-Z0-9_-]+)/i;
 
-	// Check if the input matches the video ID pattern
-	const videoMatch = urlOrId.match(videoIdExp);
-	if (videoMatch) {
-		return { type: YouTubeIdType.Video, id: videoMatch[1] };
+	// Regular expression to match standalone playlist IDs
+	const playlistIdExp = /^PL[a-zA-Z0-9_-]+$/;
+
+	// Regular expression to match standalone video IDs
+	const videoIdExp = /^[a-zA-Z0-9_-]{11}$/;
+
+	// Check if the input matches the video URL pattern
+	const videoUrlMatch = urlOrId.match(videoUrlExp);
+	if (videoUrlMatch) {
+		return { type: YouTubeIdType.Video, id: videoUrlMatch[1] };
 	}
 
-	// Check if the input matches the playlist ID pattern
-	const playlistMatch = urlOrId.match(playlistIdExp);
-	if (playlistMatch) {
-		return { type: YouTubeIdType.Playlist, id: playlistMatch[1] };
+	// Check if the input matches the playlist URL pattern
+	const playlistUrlMatch = urlOrId.match(playlistUrlExp);
+	if (playlistUrlMatch) {
+		return { type: YouTubeIdType.Playlist, id: playlistUrlMatch[1] };
 	}
 
-	// If neither match, return unknown type with the input as the ID
-	return { type: YouTubeIdType.Unknown, id: urlOrId };
+	// Check if the input is a standalone playlist ID (starts with "PL")
+	if (playlistIdExp.test(urlOrId)) {
+		return { type: YouTubeIdType.Playlist, id: urlOrId };
+	}
+
+	// Check if the input is a standalone video ID
+	if (videoIdExp.test(urlOrId)) {
+		return { type: YouTubeIdType.Video, id: urlOrId };
+	}
+
+	// If none of the above match, consider it as a search string
+	return { type: YouTubeIdType.Search, id: urlOrId };
 }
