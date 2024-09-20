@@ -1,7 +1,6 @@
 <script>
 	import { CurrentPage, setSpaPage } from '$lib';
 	import { PAGE } from '$lib/stores/MainStore';
-	import AppIcon from '../Svgs/AppIcon.svelte';
 </script>
 
 <header
@@ -9,7 +8,7 @@
 >
 	<div class="flex justify-evenly">
 		<button class="flex items-center" on:click={() => setSpaPage(CurrentPage.Home)}>
-			<AppIcon />
+			<img src="/icon.svg" alt="logo" class="w-10 h-10" />
 			<span class="ml-5 text-2xl font-semibold">My Queue Box</span>
 		</button>
 	</div>
