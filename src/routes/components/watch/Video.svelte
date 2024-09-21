@@ -55,7 +55,7 @@
 	<button on:click={openModal}>
 		<div class="relative">
 			<img
-				src="https://i.ytimg.com/vi/{video.id}/mqdefault.jpg"
+				src="https://i.ytimg.com/vi/{video.id}/maxresdefault.jpg"
 				alt={video.title}
 				class="relative flex-grow object-cover w-full transition-opacity rounded-xl aspect-video group-hover:opacity-80"
 			/>
