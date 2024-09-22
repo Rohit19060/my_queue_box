@@ -52,14 +52,23 @@
 			console.error('Error setting video as watched', e);
 		}
 	}
+	const isOlderThanSixYears = () => {
+		const publishDate = new Date(video.publishedAt);
+		const sixYearsAgo = new Date();
+		sixYearsAgo.setFullYear(sixYearsAgo.getFullYear() - 6);
+		return publishDate < sixYearsAgo;
+	};
 </script>
 
 <div class="flex flex-col justify-between bg-background rounded-xl group">
 	<button on:click={openModal}>
 		<div class="relative">
 			<img
-				src="https://i.ytimg.com/vi/{video.id}/maxresdefault.jpg"
+				src="https://i.ytimg.com/vi/{video.id}/{isOlderThanSixYears()
+					? 'hqdefault'
+					: 'maxresdefault'}.jpg"
 				alt={video.title}
+				id="video-thumbnail${video.id}"
 				class="relative flex-grow object-cover w-full transition-opacity rounded-xl aspect-video group-hover:opacity-80"
 			/>
 			<div class="absolute px-2 py-1 text-sm text-white rounded-md bottom-2 left-2 bg-black/50">
