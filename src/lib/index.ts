@@ -1,5 +1,5 @@
 import { PAGE } from "./stores/MainStore";
-import { CURRENT_CURSOR, HAS_MORE, VIDEO_STORE } from "./stores/VideoDB";
+import { CURRENT_CURSOR, HAS_MORE, IS_PLAYLIST_MODAL_OPEN, PLAYLIST_VIDEO_LIST, SEARCHED_VIDEO_DETAILS, VIDEO_STORE } from "./stores/VideoDB";
 
 export function dateToHumanReadable(date: Date): string {
 	return date.toLocaleDateString('en-US', {
@@ -160,4 +160,34 @@ export function extractYouTubeId(urlOrId: string): App.YouTubeIdResult {
 
 	// If none of the above match, consider it as a search string
 	return { type: YouTubeIdType.Search, id: urlOrId };
+}
+
+export async function searchYouTubeAPI(searchText: string): Promise<void> {
+	const extractedData = extractYouTubeId(searchText);
+	if (extractedData.type === YouTubeIdType.Video) {
+		const response = await fetch(`/api/youtube?video=${encodeURIComponent(extractedData.id)}`);
+		const data = await response.json();
+		if (!response.ok) {
+			throw new Error(data.error);
+		}
+		SEARCHED_VIDEO_DETAILS.set(data as App.YouTubeVideo);
+	} else if (extractedData.type === YouTubeIdType.Playlist) {
+		const response = await fetch(
+			`/api/youtube?playlist=${encodeURIComponent(extractedData.id)}`
+		);
+		const data = await response.json();
+		if (!response.ok) {
+			throw new Error(data.error);
+		}
+		PLAYLIST_VIDEO_LIST.set(data as App.YouTubeVideo[]);
+		IS_PLAYLIST_MODAL_OPEN.set(true);
+	} else if (extractedData.type === YouTubeIdType.Search) {
+		const response = await fetch(`/api/youtube?search=${encodeURIComponent(extractedData.id)}`);
+		const data = await response.json();
+		if (!response.ok) {
+			throw new Error(data.error);
+		}
+		PLAYLIST_VIDEO_LIST.set(data as App.YouTubeVideo[]);
+		IS_PLAYLIST_MODAL_OPEN.set(true);
+	}
 }

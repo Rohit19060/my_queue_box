@@ -16,6 +16,7 @@ export const GET: RequestHandler = async ({ url }) => {
     const videoId = url.searchParams.get('video');
     const playlistId = url.searchParams.get('playlist');
     const searchText = url.searchParams.get('search');
+    const playlistDetails = url.searchParams.get('playlistDetails');
     try {
         if (videoId) {
             return await handleVideoRequest(videoId);
@@ -23,6 +24,8 @@ export const GET: RequestHandler = async ({ url }) => {
             return await handlePlaylistRequest(playlistId);
         } else if (searchText) {
             return await handleSearchRequest(searchText);
+        } else if (playlistDetails) {
+            return await getPlayListDetails(playlistDetails);
         }
         return json({ error: 'Invalid request' }, { status: 400 });
     } catch (error) {
@@ -101,4 +104,13 @@ async function handleSearchRequest(searchText: string) {
     }));
 
     return json(formattedItems);
+}
+
+async function getPlayListDetails(id: string) {
+    const data = await fetchYouTubeData<{ items: App.Playlist[] }>(
+        `playlists?id=${id}&key=${YOUTUBE_API_KEY}&part=snippet`
+    );
+    const playlist = data.items[0];
+    if (!playlist) return json({ error: 'Video not found' }, { status: 404 });
+    return json(playlist);
 }

@@ -6,7 +6,7 @@
 		PLAYLIST_VIDEO_LIST,
 		VIDEO_STORE
 	} from '$lib/stores/VideoDB';
-	import Button from '../home/Button.svelte';
+	import Button from '../Common/Button.svelte';
 
 	export let videoDetails: App.YouTubeVideo | null;
 
@@ -45,7 +45,7 @@
 {#if videoDetails}
 	<div class="flex items-center justify-center gap-4 my-6">
 		<img
-			src="https://i.ytimg.com/vi/{videoDetails.id}/mqdefault.jpg"
+			src="https://i.ytimg.com/vi/{videoDetails.id}/maxresdefault.jpg"
 			alt={videoDetails.title}
 			width="220"
 			class="object-cover rounded-md"

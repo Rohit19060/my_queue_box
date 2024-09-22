@@ -1,9 +1,10 @@
+import { DB_PLAYLIST_STORE } from "../../routes/components/watch/Playlist/Store/PlayListStore";
 import { DB_READ_STORE } from "./ReadDB";
 import { DB_VIDEO_STORE, SortOptionDetails, SortOptions } from "./VideoDB";
 
 let dbInstance: IDBDatabase | null = null;
 let upgradeInProgress = false;
-const DB_VERSION = 2;
+const DB_VERSION = 3;
 const DB_NAME = 'kings-library';
 
 export function openDatabase(): Promise<IDBDatabase> {
@@ -27,6 +28,11 @@ export function openDatabase(): Promise<IDBDatabase> {
                 }
                 if (!db.objectStoreNames.contains(DB_READ_STORE)) {
                     db.createObjectStore(DB_READ_STORE, {
+                        keyPath: 'id'
+                    }) as IDBObjectStore;
+                }
+                if (!db.objectStoreNames.contains(DB_PLAYLIST_STORE)) {
+                    db.createObjectStore(DB_PLAYLIST_STORE, {
                         keyPath: 'id'
                     }) as IDBObjectStore;
                 }

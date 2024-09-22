@@ -1,5 +1,5 @@
 <script>
-	import Button from './Button.svelte';
+	import Button from '../Common/Button.svelte';
 
 	export let totalCount = 0;
 	export let pendingCount = 0;

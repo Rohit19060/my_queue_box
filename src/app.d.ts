@@ -8,6 +8,11 @@ declare global {
 			description: string;
 			url: string;
 		}
+
+		interface PlaylistIndexDB {
+			id: string;
+			name: string;
+		}
 		interface VideoIndexDB {
 			id: string;
 			title: string;
@@ -97,6 +102,16 @@ declare global {
 			};
 
 		}
+		interface Playlist {
+			id: string;
+			snippet: {
+				title: string;
+				description: string;
+				channelTitle: string;
+				channelId: string;
+				publishedAt: string;
+			}
+		}
 
 		interface SearchResult {
 			id: {
@@ -111,8 +126,10 @@ declare global {
 			};
 		}
 
-
-
+		interface YouTubeIdResult {
+			id: string;
+			type: YouTubeIdType;
+		}
 	}
 }
 

@@ -4,8 +4,8 @@
 	import { IS_ADD_MODAL, topReads, totalReadCount } from '$lib/stores/ReadDB';
 	import { topVideos } from '$lib/stores/VideoDB';
 	import { onMount } from 'svelte';
+	import Button from './Common/Button.svelte';
 	import BookmarkCard from './home/BookmarkCard.svelte';
-	import Button from './home/Button.svelte';
 	import CountAnalytics from './home/CountAnalytics.svelte';
 	import Video from './watch/Video.svelte';
 

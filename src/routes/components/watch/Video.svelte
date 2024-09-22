@@ -7,7 +7,7 @@
 		setVideoAsWatched,
 		VIDEO_STORE
 	} from '$lib/stores/VideoDB';
-	import Button from '../home/Button.svelte';
+	import TrashIcon from '../Svgs/TrashIcon.svelte';
 	import UnWatched from '../Svgs/UnWatched.svelte';
 	import Watched from '../Svgs/Watched.svelte';
 
@@ -16,8 +16,11 @@
 
 	async function removeVideo(id: string) {
 		try {
-			await removeVideoFromIndexDB(id);
-			VIDEO_STORE.update((x) => x.filter((x) => x.id !== id));
+			let areYouSure = confirm('Are you sure you want to remove this video from your collection?');
+			if (areYouSure) {
+				await removeVideoFromIndexDB(id);
+				VIDEO_STORE.update((x) => x.filter((x) => x.id !== id));
+			}
 		} catch (e) {
 			console.error('Error removing video from indexDB', e);
 			return;
@@ -95,7 +98,7 @@
 			>
 				{video.channelTitle}</a
 			>
-			<Button label="Remove" onclick={() => removeVideo(video.id)} className="bg-red-500" />
+			<button on:click={() => removeVideo(video.id)}><TrashIcon /></button>
 		</div>
 	</div>
 </div>

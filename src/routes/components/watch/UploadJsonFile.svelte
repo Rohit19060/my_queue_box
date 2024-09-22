@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { storeDataInIndexedDB } from '$lib/stores/VideoDB';
 	import { onDestroy, onMount } from 'svelte';
-	import Button from '../home/Button.svelte';
+	import Button from '../Common/Button.svelte';
 
 	// Define the structure of the data to be stored
 

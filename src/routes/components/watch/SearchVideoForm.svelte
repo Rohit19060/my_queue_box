@@ -1,13 +1,11 @@
 <script lang="ts">
-	import { extractYouTubeId, YouTubeIdType } from '$lib';
+	import { extractYouTubeId, searchYouTubeAPI } from '$lib';
 	import {
 		API_ERROR,
-		IS_PLAYLIST_MODAL_OPEN,
 		IS_PLAYLIST_MODAL_TYPE,
-		PLAYLIST_VIDEO_LIST,
 		SEARCHED_VIDEO_DETAILS
 	} from '$lib/stores/VideoDB';
-	import Button from '../home/Button.svelte';
+	import Button from '../Common/Button.svelte';
 	import YouTubePlaylistModal from './YouTubePlaylistModal.svelte';
 
 	let isLoading = false;
@@ -22,32 +20,7 @@
 		IS_PLAYLIST_MODAL_TYPE.set(extractedData.type);
 		try {
 			isLoading = true;
-			if (extractedData.type === YouTubeIdType.Video) {
-				const response = await fetch(`/api/youtube?video=${encodeURIComponent(extractedData.id)}`);
-				const data = await response.json();
-				if (!response.ok) {
-					throw new Error(data.error);
-				}
-				SEARCHED_VIDEO_DETAILS.set(data as App.YouTubeVideo);
-			} else if (extractedData.type === YouTubeIdType.Playlist) {
-				const response = await fetch(
-					`/api/youtube?playlist=${encodeURIComponent(extractedData.id)}`
-				);
-				const data = await response.json();
-				if (!response.ok) {
-					throw new Error(data.error);
-				}
-				PLAYLIST_VIDEO_LIST.set(data as App.YouTubeVideo[]);
-				IS_PLAYLIST_MODAL_OPEN.set(true);
-			} else if (extractedData.type === YouTubeIdType.Search) {
-				const response = await fetch(`/api/youtube?search=${encodeURIComponent(extractedData.id)}`);
-				const data = await response.json();
-				if (!response.ok) {
-					throw new Error(data.error);
-				}
-				PLAYLIST_VIDEO_LIST.set(data as App.YouTubeVideo[]);
-				IS_PLAYLIST_MODAL_OPEN.set(true);
-			}
+			await searchYouTubeAPI(searchText.value);
 			searchText.value = '';
 		} catch (err: any) {
 			SEARCHED_VIDEO_DETAILS.set(null);
@@ -63,9 +36,9 @@
 	}
 </script>
 
-<div class="flex items-center justify-center gap-2 mx-4">
+<div class="flex items-center justify-center gap-2">
 	<input
-		class="w-full p-2 border border-gray-300 focus:outline-none focus:border-black focus:border-opacity-75"
+		class="w-full p-2 border border-gray-300 max-w-80 focus:outline-none focus:border-black focus:border-opacity-75"
 		placeholder="Enter a YouTube URL or ID"
 		type="text"
 		id="youTubeVideo"

@@ -15,8 +15,8 @@
 	import { get } from 'svelte/store';
 	import VideoDetails from './watch/VideoDetails.svelte';
 
+	import SideBar from './watch/Playlist/Component/SideBar.svelte';
 	import SearchVideo from './watch/SearchVideoForm.svelte';
-	import UploadJson from './watch/UploadJsonFile.svelte';
 	import VideoTable from './watch/VideosGrid.svelte';
 	import VideosSearch from './watch/VideosSearch.svelte';
 
@@ -146,9 +146,8 @@
 	}
 </script>
 
-<div class="flex flex-col items-center justify-center gap-8 my-4 md:flex-row">
+<div class="flex justify-center my-4 ">
 	<SearchVideo />
-	<UploadJson />
 </div>
 <div class="mx-auto">
 	<VideoDetails videoDetails={$SEARCHED_VIDEO_DETAILS} />
@@ -157,7 +156,7 @@
 {#if dataLoaded}
 	<VideoTable />
 {:else}
-	<div class="loader"></div>
+	<div class="mx-auto my-20 loader"></div>
 {/if}
-
+<SideBar />
 <div id="load-more-trigger"></div>

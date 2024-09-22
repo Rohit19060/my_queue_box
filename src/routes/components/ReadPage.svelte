@@ -6,7 +6,7 @@
 		removeReadFromIndexDB
 	} from '$lib/stores/ReadDB';
 	import { onMount } from 'svelte';
-	import Button from './home/Button.svelte';
+	import Button from './Common/Button.svelte';
 	import AddRead from './Read/AddRead.svelte';
 	import TrashIcon from './Svgs/TrashIcon.svelte';
 

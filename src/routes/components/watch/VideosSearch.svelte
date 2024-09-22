@@ -19,9 +19,19 @@
 			dropdownMenu.classList.toggle('hidden');
 		}
 	}
+
+	let hovered = false;
+
+	function handleMouseEnter() {
+		hovered = true;
+	}
+
+	function handleMouseLeave() {
+		hovered = false;
+	}
 </script>
 
-<div class="flex items-center justify-center gap-4">
+<div class="flex items-center justify-center gap-4 mx-4 my-2">
 	<input
 		class="w-full max-w-4xl p-2 border border-gray-300 focus:outline-none focus:border-black focus:border-opacity-75"
 		placeholder="Search videos..."
@@ -34,8 +44,10 @@
 				id="dropdownButton"
 				on:click={toggleDropdown}
 				class="cursor-pointer px-4 py-2 m-1 bg-white border-none shadow-md text-[15px] hover:bg-black hover:text-white flex items-center justify-center w-full gap-2 text-sm font-medium focus:outline-none"
+				on:mouseenter={handleMouseEnter}
+				on:mouseleave={handleMouseLeave}
 			>
-				<AescDescArrow isDesc={$IS_DESC} />
+				<AescDescArrow isDesc={$IS_DESC}  color={hovered ? 'white' : 'black'}/>
 				<p>{SortOptionDetails[$SORT_BY].str}</p>
 				<svg
 					class="w-5 h-5 ml-2 -mr-1"

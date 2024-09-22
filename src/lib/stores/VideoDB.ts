@@ -36,19 +36,7 @@ export const PLAYLIST_VIDEO_LIST = writable<App.YouTubeVideo[]>([]);
 export const SEARCHED_VIDEO_DETAILS = writable<App.YouTubeVideo | null>(null);
 export const API_ERROR = writable<string | null>(null);
 
-export async function storeDataInIndexedDB(data: App.VideoJsonResponse[]): Promise<void> {
-	const DB = await openDatabase();
-	const TRANSACTION = DB.transaction(DB_VIDEO_STORE, 'readwrite');
-	const OBJECT_STORE = TRANSACTION.objectStore(DB_VIDEO_STORE);
-	return new Promise((resolve, reject) => {
-		data.forEach((item) => {
-			const convertedItem = convertToVideoIndexDB(item);
-			OBJECT_STORE.put(convertedItem);
-		});
-		TRANSACTION.oncomplete = () => resolve();
-		TRANSACTION.onerror = (event: Event) => reject((event.target as IDBRequest).error);
-	});
-}
+
 
 export async function fetchPaginatedData(
 	cursorValue: IDBValidKey | null,
@@ -212,5 +200,19 @@ export async function setVideoAsWatched(id: string, watched: boolean): Promise<v
 		};
 		REQUEST.onerror = (event: Event) =>
 			reject((event.target as IDBRequest).error);
+	});
+}
+
+export async function storeDataInIndexedDB(data: App.VideoJsonResponse[]): Promise<void> {
+	const DB = await openDatabase();
+	const TRANSACTION = DB.transaction(DB_VIDEO_STORE, 'readwrite');
+	const OBJECT_STORE = TRANSACTION.objectStore(DB_VIDEO_STORE);
+	return new Promise((resolve, reject) => {
+		data.forEach((item) => {
+			const convertedItem = convertToVideoIndexDB(item);
+			OBJECT_STORE.put(convertedItem);
+		});
+		TRANSACTION.oncomplete = () => resolve();
+		TRANSACTION.onerror = (event: Event) => reject((event.target as IDBRequest).error);
 	});
 }

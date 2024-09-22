@@ -8,7 +8,7 @@
 		PLAYLIST_VIDEO_LIST,
 		VIDEO_STORE
 	} from '$lib/stores/VideoDB';
-	import Button from '../home/Button.svelte';
+	import Button from '../Common/Button.svelte';
 	import VideoDetails from './VideoDetails.svelte';
 
 	let isLoading = false;
@@ -25,9 +25,14 @@
 			isLoading = true;
 			let videos: App.VideoIndexDB[] = [];
 			for (let i = 0; i < $PLAYLIST_VIDEO_LIST.length; i++) {
-				let x = await addVideoToIndexDB($PLAYLIST_VIDEO_LIST[i]);
-				if (x) {
-					videos.push(x);
+				try {
+					let x = await addVideoToIndexDB($PLAYLIST_VIDEO_LIST[i]);
+					if (x) {
+						videos.push(x);
+					}
+				} catch (e) {
+					console.error('Error adding video to indexDB', e);
+					API_ERROR.set(`Couldn't add video to indexDB ${e}`);
 				}
 			}
 			PLAYLIST_VIDEO_LIST.set([]);
