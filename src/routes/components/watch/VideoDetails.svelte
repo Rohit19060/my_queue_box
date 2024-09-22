@@ -40,12 +40,21 @@
 			IS_PLAYLIST_MODAL_OPEN.set(false);
 		}
 	}
+	const isOlderThanSixYears = () => {
+		if (!videoDetails) return false;
+		const publishDate = new Date(videoDetails.publishedAt);
+		const sixYearsAgo = new Date();
+		sixYearsAgo.setFullYear(sixYearsAgo.getFullYear() - 6);
+		return publishDate < sixYearsAgo;
+	};
 </script>
 
 {#if videoDetails}
 	<div class="flex items-center justify-center gap-4 my-6">
 		<img
-			src="https://i.ytimg.com/vi/{videoDetails.id}/maxresdefault.jpg"
+			src="https://i.ytimg.com/vi/{videoDetails.id}/{isOlderThanSixYears()
+				? 'hqdefault'
+				: 'maxresdefault'}.jpg"
 			alt={videoDetails.title}
 			width="220"
 			class="object-cover rounded-md"
