@@ -15,14 +15,14 @@
 		"test:unit": "vitest run src/index.test.ts src/lib/index.test.ts src/lib/stores/stores.test.ts src/routes/components/components.test.ts src/routes/api/youtube/+server.test.ts"
 	},
 	"devDependencies": {
-		"@playwright/test": "^1.47.1",
+		"@playwright/test": "^1.47.2",
 		"@sveltejs/adapter-auto": "^3.2.5",
 		"@sveltejs/adapter-static": "^3.0.5",
 		"@sveltejs/kit": "^2.5.28",
 		"@sveltejs/vite-plugin-svelte": "^3.1.2",
 		"@types/eslint": "^9.6.1",
 		"autoprefixer": "^10.4.20",
-		"eslint": "^9.10.0",
+		"eslint": "^9.11.0",
 		"eslint-config-prettier": "^9.1.0",
 		"eslint-plugin-svelte": "^2.44.0",
 		"gh-pages": "^6.1.1",
@@ -35,7 +35,7 @@
 		"tailwindcss": "^3.4.12",
 		"typescript": "^5.6.2",
 		"typescript-eslint": "^8.6.0",
-		"vite": "^5.4.6",
+		"vite": "^5.4.7",
 		"vitest": "^2.1.1"
 	},
 	"type": "module",
