@@ -163,6 +163,8 @@ export function extractYouTubeId(urlOrId: string): App.YouTubeIdResult {
 }
 
 export async function searchYouTubeAPI(searchText: string): Promise<void> {
+	SEARCHED_VIDEO_DETAILS.set(null);
+	PLAYLIST_VIDEO_LIST.set([]);
 	const extractedData = extractYouTubeId(searchText);
 	if (extractedData.type === YouTubeIdType.Video) {
 		const response = await fetch(`/api/youtube?video=${encodeURIComponent(extractedData.id)}`);

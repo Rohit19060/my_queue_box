@@ -3,7 +3,8 @@
 	import {
 		API_ERROR,
 		IS_PLAYLIST_MODAL_TYPE,
-		SEARCHED_VIDEO_DETAILS
+		SEARCHED_VIDEO_DETAILS,
+		PLAYLIST_VIDEO_LIST
 	} from '$lib/stores/VideoDB';
 	import Button from '../Common/Button.svelte';
 	import YouTubePlaylistModal from './YouTubePlaylistModal.svelte';
@@ -16,6 +17,8 @@
 			alert('Please enter a search term.');
 			return;
 		}
+		SEARCHED_VIDEO_DETAILS.set(null);
+		PLAYLIST_VIDEO_LIST.set([]);
 		let extractedData = extractYouTubeId(searchText.value);
 		IS_PLAYLIST_MODAL_TYPE.set(extractedData.type);
 		try {
