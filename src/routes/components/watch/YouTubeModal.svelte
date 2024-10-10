@@ -11,11 +11,7 @@
 		IS_VIDEO_MODAL_OPEN.set(false);
 	}
 
-	let ids = '';
-
-	onMount(() => {
-		ids = $VIDEO_STORE.map((x) => x.id).join(',');
-	});
+	$: ids = $VIDEO_STORE.slice(0, 100).map((x) => x.id).join(',');
 </script>
 
 {#if $IS_VIDEO_MODAL_OPEN}
