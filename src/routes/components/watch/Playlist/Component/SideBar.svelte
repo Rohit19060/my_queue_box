@@ -10,6 +10,7 @@
 		SIDEBAR_OPEN,
 		storePlaylistInIndexedDB
 	} from '../Store/PlayListStore';
+	import { IS_PLAYLIST_MODAL_TYPE } from '$lib/stores/VideoDB';
 
 	let newPlaylistName: string = '';
 	let isLoading = {
@@ -109,7 +110,11 @@
 				state: true,
 				type: 'show'
 			};
-			await searchYouTubeAPI(playlist.id);
+			const x = await searchYouTubeAPI(playlist.id);
+			if (x === YouTubeIdType.Playlist) {
+				IS_PLAYLIST_MODAL_TYPE.set('PLAYLIST');
+			}
+
 			SIDEBAR_OPEN.set(false);
 		} catch (e) {
 			console.error('Error fetching playlist details', e);
@@ -163,7 +168,9 @@
 				<div
 					class="flex items-center justify-between p-2 mb-2 transition-transform duration-300 ease-in-out bg-white rounded shadow"
 				>
-					<span class="flex-grow truncate">{playlist.name}</span>
+					<a href="https://www.youtube.com/playlist?list={playlist.id}" target="_blank">
+						<span class="flex-grow truncate">{playlist.name}</span></a
+					>
 					<div class="flex space-x-1">
 						<button
 							on:click={() => showPlayListDetails(playlist)}

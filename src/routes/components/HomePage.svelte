@@ -17,12 +17,11 @@
 
 	onMount(async () => {
 		let res = await totalAndWatchedVideoCountFn();
-		totalVideoCount = res.total;
-		watchedVideoCount = res.watched;
-		videos = await topVideos();
-
+		totalVideoCount = res.totalVideoCount;
+		watchedVideoCount = res.watchedCount;
 		let res2 = await totalReadCount();
 		totalReads = res2.total;
+		videos = await topVideos();
 		reads = await topReads();
 	});
 

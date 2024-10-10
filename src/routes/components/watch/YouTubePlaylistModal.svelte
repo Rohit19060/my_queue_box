@@ -2,7 +2,6 @@
 	import { YouTubeIdType } from '$lib';
 	import {
 		addVideoToIndexDB,
-		API_ERROR,
 		IS_PLAYLIST_MODAL_OPEN,
 		IS_PLAYLIST_MODAL_TYPE,
 		PLAYLIST_VIDEO_LIST,
@@ -32,7 +31,6 @@
 					}
 				} catch (e) {
 					console.error('Error adding video to indexDB', e);
-					API_ERROR.set(`Couldn't add video to indexDB ${e}`);
 				}
 			}
 			PLAYLIST_VIDEO_LIST.set([]);
@@ -40,7 +38,6 @@
 			closeModal();
 		} catch (e) {
 			console.error('Error adding video to indexDB', e);
-			API_ERROR.set(`Couldn't add video to indexDB ${e}`);
 			return;
 		} finally {
 			isLoading = false;

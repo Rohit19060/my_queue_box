@@ -6,6 +6,7 @@ const ITEMS_PER_PAGE = 40;
 
 export const DB_VIDEO_STORE = 'videoStore';
 
+
 export enum SortOptions {
 	Title = 'titleIndex',
 	Duration = 'durationIndex',
@@ -22,21 +23,21 @@ export const SortOptionDetails: {
 	[SortOptions.PublishedAt]: { keypath: ['publishedAtStr', 'id'], str: 'Published' }
 };
 
-export const SORT_BY = writable<SortOptions>(SortOptions.PublishedAt);
-export const IS_DESC = writable<boolean>(true);
+export const TOTAL_VIDEO_COUNT = writable(0);
+export const WATCHED_VIDEO_COUNT = writable(0);
+export const SORT_BY = writable(SortOptions.PublishedAt);
+export const IS_DESC = writable(true);
 export const VIDEO_STORE = writable<App.VideoIndexDB[]>([]);
-export const SEARCH_TEXT = writable<string>('');
+export const SEARCH_TEXT = writable('');
 export const HAS_MORE = writable(true);
 export const CURRENT_CURSOR = writable<IDBValidKey | null>(null);
 export const CURRENT_VIDEO_ID = writable<App.VideoIndexDB>();
 export const IS_VIDEO_MODAL_OPEN = writable(false);
 export const IS_PLAYLIST_MODAL_OPEN = writable(false);
-export const IS_PLAYLIST_MODAL_TYPE = writable<string>("PLAYLIST");
+export const IS_PLAYLIST_MODAL_TYPE = writable('PLAYLIST');
+export const IS_PLAY_VIDEOS = writable(false);
 export const PLAYLIST_VIDEO_LIST = writable<App.YouTubeVideo[]>([]);
 export const SEARCHED_VIDEO_DETAILS = writable<App.YouTubeVideo | null>(null);
-export const API_ERROR = writable<string | null>(null);
-
-
 
 export async function fetchPaginatedData(
 	cursorValue: IDBValidKey | null,
@@ -77,7 +78,6 @@ export async function fetchPaginatedData(
 		OPEN_REQUEST.onerror = (event: Event) => reject((event.target as IDBRequest).error);
 	});
 }
-
 
 export async function searchVideos(
 	cursorValue: IDBValidKey | null,
@@ -147,7 +147,6 @@ export async function topVideos(): Promise<App.VideoIndexDB[]> {
 	});
 }
 
-
 export async function addVideoToIndexDB(video: App.YouTubeVideo): Promise<App.VideoIndexDB | null> {
 	let tempVideo = video;
 	if (!tempVideo.duration) {
@@ -192,14 +191,12 @@ export async function setVideoAsWatched(id: string, watched: boolean): Promise<v
 				VIDEO.watched = watched;
 				const putRequest = OBJECT_STORE.put(VIDEO);
 				putRequest.onsuccess = () => resolve();
-				putRequest.onerror = (event: Event) =>
-					reject((event.target as IDBRequest).error);
+				putRequest.onerror = (event: Event) => reject((event.target as IDBRequest).error);
 			} else {
 				reject(new Error(`Video with id ${id} not found.`));
 			}
 		};
-		REQUEST.onerror = (event: Event) =>
-			reject((event.target as IDBRequest).error);
+		REQUEST.onerror = (event: Event) => reject((event.target as IDBRequest).error);
 	});
 }
 

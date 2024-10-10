@@ -162,7 +162,7 @@ export function extractYouTubeId(urlOrId: string): App.YouTubeIdResult {
 	return { type: YouTubeIdType.Search, id: urlOrId };
 }
 
-export async function searchYouTubeAPI(searchText: string): Promise<void> {
+export async function searchYouTubeAPI(searchText: string): Promise<YouTubeIdType> {
 	SEARCHED_VIDEO_DETAILS.set(null);
 	PLAYLIST_VIDEO_LIST.set([]);
 	const extractedData = extractYouTubeId(searchText);
@@ -192,4 +192,5 @@ export async function searchYouTubeAPI(searchText: string): Promise<void> {
 		PLAYLIST_VIDEO_LIST.set(data as App.YouTubeVideo[]);
 		IS_PLAYLIST_MODAL_OPEN.set(true);
 	}
+	return extractedData.type;
 }

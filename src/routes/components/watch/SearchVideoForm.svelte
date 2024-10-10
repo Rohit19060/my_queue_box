@@ -1,7 +1,6 @@
 <script lang="ts">
 	import { extractYouTubeId, searchYouTubeAPI } from '$lib';
 	import {
-		API_ERROR,
 		IS_PLAYLIST_MODAL_TYPE,
 		SEARCHED_VIDEO_DETAILS,
 		PLAYLIST_VIDEO_LIST
@@ -27,7 +26,6 @@
 			searchText.value = '';
 		} catch (err: any) {
 			SEARCHED_VIDEO_DETAILS.set(null);
-			API_ERROR.set(err.message);
 		} finally {
 			isLoading = false;
 		}
@@ -39,7 +37,7 @@
 	}
 </script>
 
-<div class="flex items-center justify-center gap-2">
+<div class="flex items-center justify-center gap-2 mt-2 mb-3">
 	<input
 		class="w-full p-2 border border-gray-300 max-w-80 focus:outline-none focus:border-black focus:border-opacity-75"
 		placeholder="Enter a YouTube URL or ID"

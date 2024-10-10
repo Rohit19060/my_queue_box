@@ -1,7 +1,6 @@
 <script lang="ts">
 	import {
 		addVideoToIndexDB,
-		API_ERROR,
 		IS_PLAYLIST_MODAL_OPEN,
 		PLAYLIST_VIDEO_LIST,
 		VIDEO_STORE
@@ -20,12 +19,11 @@
 		try {
 			let video = await addVideoToIndexDB(videoDetails);
 			if (video) {
-				VIDEO_STORE.update((x) => [...x, video]);
+				VIDEO_STORE.update((x) => [video, ...x]);
 			}
 			removeVideoFromPlaylist();
 		} catch (e) {
 			console.error('Error adding video to indexDB', e);
-			API_ERROR.set(`Couldn't add video to indexDB ${e}`);
 			return;
 		} finally {
 			isLoading = false;
@@ -40,21 +38,12 @@
 			IS_PLAYLIST_MODAL_OPEN.set(false);
 		}
 	}
-	const isOlderThanSixYears = () => {
-		if (!videoDetails) return false;
-		const publishDate = new Date(videoDetails.publishedAt);
-		const sixYearsAgo = new Date();
-		sixYearsAgo.setFullYear(sixYearsAgo.getFullYear() - 6);
-		return publishDate < sixYearsAgo;
-	};
 </script>
 
 {#if videoDetails}
 	<div class="flex items-center justify-center gap-4 my-6">
 		<img
-			src="https://i.ytimg.com/vi/{videoDetails.id}/{isOlderThanSixYears()
-				? 'hqdefault'
-				: 'maxresdefault'}.jpg"
+			src="https://i.ytimg.com/vi/{videoDetails.id}/hqdefault.jpg"
 			alt={videoDetails.title}
 			width="220"
 			class="object-cover rounded-md"
