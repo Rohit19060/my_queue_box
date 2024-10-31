@@ -9,6 +9,9 @@ const fetchYouTubeData = async <T>(endpoint: string): Promise<T> => {
     return response.json() as Promise<T>;
 };
 
+// In-memory cache
+const cache: Map<string, any> = new Map();
+
 export const GET: RequestHandler = async ({ url }) => {
     if (!YOUTUBE_API_KEY) {
         return json({ error: 'YouTube API key is not set' }, { status: 500 });
@@ -35,6 +38,11 @@ export const GET: RequestHandler = async ({ url }) => {
 
 // Handle video request with inlined formatting
 async function handleVideoRequest(videoId: string) {
+    // Check cache
+    if (cache.has(videoId)) {
+        return json(cache.get(videoId));
+    }
+
     const data = await fetchYouTubeData<{ items: App.VideoResult[] }>(
         `videos?id=${videoId}&key=${YOUTUBE_API_KEY}&part=snippet,contentDetails,statistics`
     );
@@ -54,11 +62,19 @@ async function handleVideoRequest(videoId: string) {
         publishedAt: video.snippet.publishedAt,
     };
 
+    // Store in cache
+    cache.set(videoId, formattedVideo);
+
     return json(formattedVideo);
 }
 
 // Handle playlist request with inlined formatting
 async function handlePlaylistRequest(playlistId: string) {
+    // Check cache
+    if (cache.has(playlistId)) {
+        return json(cache.get(playlistId));
+    }
+
     let items: App.PlaylistItem[] = [];
     let nextPageToken: string | undefined;
 
@@ -81,11 +97,20 @@ async function handlePlaylistRequest(playlistId: string) {
         tags: [],
         publishedAt: item.contentDetails.videoPublishedAt,
     }));
+
+    // Store in cache
+    cache.set(playlistId, formattedItems);
+
     return json(formattedItems);
 }
 
 // Handle search request with inlined formatting
 async function handleSearchRequest(searchText: string) {
+    // Check cache
+    if (cache.has(searchText)) {
+        return json(cache.get(searchText));
+    }
+
     const data = await fetchYouTubeData<{ items: App.SearchResult[] }>(
         `search?part=snippet&key=${YOUTUBE_API_KEY}&type=video&maxResults=10&q=${searchText}`
     );
@@ -103,14 +128,26 @@ async function handleSearchRequest(searchText: string) {
         publishedAt: item.snippet.publishedAt,
     }));
 
+    // Store in cache
+    cache.set(searchText, formattedItems);
+
     return json(formattedItems);
 }
 
 async function getPlayListDetails(id: string) {
+    // Check cache
+    if (cache.has(id)) {
+        return json(cache.get(id));
+    }
+
     const data = await fetchYouTubeData<{ items: App.Playlist[] }>(
         `playlists?id=${id}&key=${YOUTUBE_API_KEY}&part=snippet`
     );
     const playlist = data.items[0];
     if (!playlist) return json({ error: 'Video not found' }, { status: 404 });
+
+    // Store in cache
+    cache.set(id, playlist);
+
     return json(playlist);
 }
