@@ -39,8 +39,9 @@ export const GET: RequestHandler = async ({ url }) => {
 // Handle video request with inlined formatting
 async function handleVideoRequest(videoId: string) {
     // Check cache
-    if (cache.has(videoId)) {
-        return json(cache.get(videoId));
+    const cacheKey = `video:${videoId}`;
+    if (cache.has(cacheKey)) {
+        return json(cache.get(cacheKey));
     }
 
     const data = await fetchYouTubeData<{ items: App.VideoResult[] }>(
@@ -63,7 +64,7 @@ async function handleVideoRequest(videoId: string) {
     };
 
     // Store in cache
-    cache.set(videoId, formattedVideo);
+    cache.set(cacheKey, formattedVideo);
 
     return json(formattedVideo);
 }
@@ -71,8 +72,9 @@ async function handleVideoRequest(videoId: string) {
 // Handle playlist request with inlined formatting
 async function handlePlaylistRequest(playlistId: string) {
     // Check cache
-    if (cache.has(playlistId)) {
-        return json(cache.get(playlistId));
+    const cacheKey = `playlist:${playlistId}`;
+    if (cache.has(cacheKey)) {
+        return json(cache.get(cacheKey));
     }
 
     let items: App.PlaylistItem[] = [];
@@ -99,7 +101,7 @@ async function handlePlaylistRequest(playlistId: string) {
     }));
 
     // Store in cache
-    cache.set(playlistId, formattedItems);
+    cache.set(cacheKey, formattedItems);
 
     return json(formattedItems);
 }
@@ -107,8 +109,9 @@ async function handlePlaylistRequest(playlistId: string) {
 // Handle search request with inlined formatting
 async function handleSearchRequest(searchText: string) {
     // Check cache
-    if (cache.has(searchText)) {
-        return json(cache.get(searchText));
+    const cacheKey = `search:${searchText}`;
+    if (cache.has(cacheKey)) {
+        return json(cache.get(cacheKey));
     }
 
     const data = await fetchYouTubeData<{ items: App.SearchResult[] }>(
@@ -129,15 +132,16 @@ async function handleSearchRequest(searchText: string) {
     }));
 
     // Store in cache
-    cache.set(searchText, formattedItems);
+    cache.set(cacheKey, formattedItems);
 
     return json(formattedItems);
 }
 
 async function getPlayListDetails(id: string) {
     // Check cache
-    if (cache.has(id)) {
-        return json(cache.get(id));
+    const cacheKey = `playlistDetails:${id}`;
+    if (cache.has(cacheKey)) {
+        return json(cache.get(cacheKey));
     }
 
     const data = await fetchYouTubeData<{ items: App.Playlist[] }>(
@@ -147,7 +151,7 @@ async function getPlayListDetails(id: string) {
     if (!playlist) return json({ error: 'Video not found' }, { status: 404 });
 
     // Store in cache
-    cache.set(id, playlist);
+    cache.set(cacheKey, playlist);
 
     return json(playlist);
 }
