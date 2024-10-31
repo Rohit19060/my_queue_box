@@ -71,12 +71,6 @@ async function handleVideoRequest(videoId: string) {
 
 // Handle playlist request with inlined formatting
 async function handlePlaylistRequest(playlistId: string) {
-    // Check cache
-    const cacheKey = `playlist:${playlistId}`;
-    if (cache.has(cacheKey)) {
-        return json(cache.get(cacheKey));
-    }
-
     let items: App.PlaylistItem[] = [];
     let nextPageToken: string | undefined;
 
@@ -100,20 +94,11 @@ async function handlePlaylistRequest(playlistId: string) {
         publishedAt: item.contentDetails.videoPublishedAt,
     }));
 
-    // Store in cache
-    cache.set(cacheKey, formattedItems);
-
     return json(formattedItems);
 }
 
 // Handle search request with inlined formatting
 async function handleSearchRequest(searchText: string) {
-    // Check cache
-    const cacheKey = `search:${searchText}`;
-    if (cache.has(cacheKey)) {
-        return json(cache.get(cacheKey));
-    }
-
     const data = await fetchYouTubeData<{ items: App.SearchResult[] }>(
         `search?part=snippet&key=${YOUTUBE_API_KEY}&type=video&maxResults=10&q=${searchText}`
     );
@@ -131,27 +116,15 @@ async function handleSearchRequest(searchText: string) {
         publishedAt: item.snippet.publishedAt,
     }));
 
-    // Store in cache
-    cache.set(cacheKey, formattedItems);
-
     return json(formattedItems);
 }
 
 async function getPlayListDetails(id: string) {
-    // Check cache
-    const cacheKey = `playlistDetails:${id}`;
-    if (cache.has(cacheKey)) {
-        return json(cache.get(cacheKey));
-    }
-
     const data = await fetchYouTubeData<{ items: App.Playlist[] }>(
         `playlists?id=${id}&key=${YOUTUBE_API_KEY}&part=snippet`
     );
     const playlist = data.items[0];
     if (!playlist) return json({ error: 'Video not found' }, { status: 404 });
-
-    // Store in cache
-    cache.set(cacheKey, playlist);
 
     return json(playlist);
 }
