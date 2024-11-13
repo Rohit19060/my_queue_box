@@ -20,7 +20,6 @@
 				class="flex items-center justify-center w-20 mr-auto"
 				on:click={() => SIDEBAR_OPEN.set(!$SIDEBAR_OPEN)}
 			>
-				<!-- content here -->
 				<MenuRound />
 			</button>
 		{/if}

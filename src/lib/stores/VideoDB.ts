@@ -213,3 +213,17 @@ export async function storeDataInIndexedDB(data: App.VideoJsonResponse[]): Promi
 		TRANSACTION.onerror = (event: Event) => reject((event.target as IDBRequest).error);
 	});
 }
+
+export async function isAlreadyThere(videoId: string): Promise<boolean> {
+	const DB = await openDatabase();
+	const TRANSACTION = DB.transaction(DB_VIDEO_STORE, 'readonly');
+	const OBJECT_STORE = TRANSACTION.objectStore(DB_VIDEO_STORE);
+	return new Promise((resolve, reject) => {
+		const REQUEST = OBJECT_STORE.get(videoId);
+		REQUEST.onsuccess = (event: Event) => {
+			const VIDEO = (event.target as IDBRequest).result;
+			resolve(!!VIDEO);
+		};
+		REQUEST.onerror = (event: Event) => reject((event.target as IDBRequest).error);
+	});
+}

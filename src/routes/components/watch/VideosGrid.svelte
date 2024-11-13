@@ -4,7 +4,7 @@
 </script>
 
 {#if $VIDEO_STORE.length > 0}
-	<div class="p-5 max-auto">
+	<div class="p-3 md:p-5 max-auto">
 		<div class="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
 			{#each $VIDEO_STORE as video}
 				<Video {video} />

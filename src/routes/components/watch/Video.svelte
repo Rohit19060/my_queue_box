@@ -43,7 +43,7 @@
 	}
 
 	async function toggleWatch(event: MouseEvent) {
-		event.stopPropagation(); // Prevents the parent button click event
+		event.stopPropagation();
 		try {
 			await setVideoAsWatched(video.id, !video.watched);
 			VIDEO_STORE.update((x) =>
@@ -69,6 +69,7 @@
 				{timeAgo(video.publishedAt)}
 			</div>
 			{#if video.watched}
+				<!-- svelte-ignore node_invalid_placement_ssr -->
 				<button
 					class="absolute p-1.5 py-1 text-sm text-white rounded-md top-2 right-2 bg-black/60"
 					on:click={toggleWatch}
@@ -76,6 +77,7 @@
 					<Watched />
 				</button>
 			{:else}
+				<!-- svelte-ignore node_invalid_placement_ssr -->
 				<button
 					class="absolute p-1.5 py-1 text-sm text-white rounded-md top-2 right-2 bg-black/60 opacity-0 group-hover:opacity-100"
 					on:click={toggleWatch}

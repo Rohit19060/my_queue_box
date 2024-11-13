@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { extractYouTubeId, searchYouTubeAPI, YouTubeIdType } from '$lib';
+	import { IS_PLAYLIST_MODAL_TYPE } from '$lib/stores/VideoDB';
 	import { onMount } from 'svelte';
 	import Button from '../../../Common/Button.svelte';
 	import TrashIcon from '../../../Svgs/TrashIcon.svelte';
@@ -10,7 +11,6 @@
 		SIDEBAR_OPEN,
 		storePlaylistInIndexedDB
 	} from '../Store/PlayListStore';
-	import { IS_PLAYLIST_MODAL_TYPE } from '$lib/stores/VideoDB';
 
 	let newPlaylistName: string = '';
 	let isLoading = {
@@ -154,22 +154,20 @@
 				/>
 				<div class="flex items-center justify-center w-24">
 					{#if isLoading.id == '0' && isLoading.state}
-						<div class="loader" />
+						<div class="loader"></div>
 					{:else}
 						<Button label="Add" type="submit" />
 					{/if}
 				</div>
 			</div>
 		</form>
-
-		<!-- Playlist Items -->
 		<div class="flex-grow overflow-y-auto">
 			{#each $PLAYLIST_STORE as playlist}
 				<div
 					class="flex items-center justify-between p-2 mb-2 transition-transform duration-300 ease-in-out bg-white rounded shadow"
 				>
 					<a href="https://www.youtube.com/playlist?list={playlist.id}" target="_blank">
-						<span class="flex-grow truncate">{playlist.name}</span></a
+						<span class="text-ellipsis line-clamp-1">{playlist.name}</span></a
 					>
 					<div class="flex space-x-1">
 						<button

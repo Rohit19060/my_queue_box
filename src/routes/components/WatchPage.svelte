@@ -13,12 +13,10 @@
 	} from '$lib/stores/VideoDB';
 	import { onMount } from 'svelte';
 	import { get } from 'svelte/store';
-	import VideoDetails from './watch/VideoDetails.svelte';
 	import SideBar from './watch/Playlist/Component/SideBar.svelte';
-	import SearchVideo from './watch/SearchVideoForm.svelte';
+	import VideoDetails from './watch/VideoDetails.svelte';
 	import VideoTable from './watch/VideosGrid.svelte';
 	import VideosSearch from './watch/VideosSearch.svelte';
-	import Play from './watch/Play/Play.svelte';
 
 	let observer: IntersectionObserver;
 
@@ -146,17 +144,8 @@
 	}
 </script>
 
-<div class="flex items-center justify-between">
-	<div class="size-24"></div>
-	<div class="flex-grow">
-		<SearchVideo />
-		<VideosSearch onSort={(x) => reset(x)} onSearch={(y) => searchVideo(y)} />
-	</div>
-	<Play />
-</div>
-<div class="mx-auto">
-	<VideoDetails videoDetails={$SEARCHED_VIDEO_DETAILS} />
-</div>
+<VideosSearch onSort={(x) => reset(x)} onSearch={(y) => searchVideo(y)} />
+<VideoDetails videoDetails={$SEARCHED_VIDEO_DETAILS} />
 {#if dataLoaded}
 	<VideoTable />
 {:else}

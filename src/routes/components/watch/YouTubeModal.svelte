@@ -5,7 +5,6 @@
 		IS_VIDEO_MODAL_OPEN,
 		VIDEO_STORE
 	} from '$lib/stores/VideoDB';
-	import { onMount } from 'svelte';
 
 	function closeModal() {
 		IS_VIDEO_MODAL_OPEN.set(false);
@@ -19,9 +18,6 @@
 		class="fixed inset-0 z-50 flex flex-col items-center justify-center bg-black cursor-default bg-opacity-85"
 		on:click={closeModal}
 	>
-		{#if !$IS_PLAY_VIDEOS}
-			<div class="text-2xl text-white">{$CURRENT_VIDEO_ID.title}</div>
-		{/if}
 		<div class="relative w-full mx-auto my-4 overflow-hidden max-w-7xl rounded-xl">
 			<div class="relative pb-[56.25%] h-0">
 				{#if $IS_PLAY_VIDEOS}
@@ -45,8 +41,5 @@
 				{/if}
 			</div>
 		</div>
-		{#if !$IS_PLAY_VIDEOS}
-			<div class="text-2xl text-white line-clamp-3">{$CURRENT_VIDEO_ID.description}</div>
-		{/if}
 	</button>
 {/if}

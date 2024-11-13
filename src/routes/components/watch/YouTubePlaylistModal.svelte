@@ -47,10 +47,11 @@
 
 {#if $IS_PLAYLIST_MODAL_OPEN}
 	<div class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-75">
-		<div class="relative w-full max-w-5xl max-h-screen overflow-hidden bg-white rounded-xl">
+		<div class="relative w-full max-w-5xl max-h-screen bg-white rounded-xl">
 			<button
 				on:click={closeModal}
 				class="absolute p-1 rounded-full top-4 right-6 hover:bg-black hover:text-white"
+				aria-label="Close Modal"
 			>
 				<svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
 					<path
@@ -67,7 +68,7 @@
 						<h2 class="text-xl font-bold">Playlist Videos ({$PLAYLIST_VIDEO_LIST.length})</h2>
 						<div class="flex items-center justify-center w-24">
 							{#if isLoading}
-								<div class="loader" />
+								<div class="loader"></div>
 							{:else}
 								<Button label="Add&nbsp;Playlist" onclick={addAllVideos} />
 							{/if}
@@ -78,7 +79,6 @@
 						<h2 class="text-xl font-bold">Search Result</h2>
 					</div>
 				{/if}
-				<!-- else content here -->
 				{#each $PLAYLIST_VIDEO_LIST as video}
 					<VideoDetails videoDetails={video} />
 				{/each}

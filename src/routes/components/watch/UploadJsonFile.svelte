@@ -94,13 +94,11 @@
 </script>
 
 {#if !isMobile}
-	<!-- content here -->
 	<div>
 		{#if isLoading}
 			<div class="loader"></div>
 		{:else}
 			<Button onclick={handleFileInputClick} label="Upload JSON File" />
-			<!-- Hidden file input -->
 			<input
 				id="fileInput"
 				type="file"

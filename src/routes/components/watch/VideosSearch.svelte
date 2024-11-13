@@ -1,6 +1,21 @@
 <script lang="ts">
-	import { IS_DESC, SORT_BY, SortOptionDetails, SortOptions } from '$lib/stores/VideoDB';
+	import { extractYouTubeId, searchYouTubeAPI } from '$lib';
+	import {
+		IS_DESC,
+		IS_PLAY_VIDEOS,
+		IS_PLAYLIST_MODAL_TYPE,
+		IS_VIDEO_MODAL_OPEN,
+		PLAYLIST_VIDEO_LIST,
+		SEARCHED_VIDEO_DETAILS,
+		SORT_BY,
+		SortOptionDetails,
+		SortOptions
+	} from '$lib/stores/VideoDB';
+	import Button from '../Common/Button.svelte';
 	import AescDescArrow from './AescDescArrow.svelte';
+	import YouTubePlaylistModal from './YouTubePlaylistModal.svelte';
+
+	let isLoading = false;
 
 	export let onSort: App.AfterSort;
 	export let onSearch: App.OnSearch;
@@ -29,16 +44,79 @@
 	function handleMouseLeave() {
 		hovered = false;
 	}
+
+	async function searchYouTube() {
+		onSearch('');
+		const searchText = document.querySelector('#youTubeVideo') as HTMLInputElement;
+		if (!searchText.value) {
+			alert('Please enter a search term.');
+			return;
+		}
+		SEARCHED_VIDEO_DETAILS.set(null);
+		PLAYLIST_VIDEO_LIST.set([]);
+		let extractedData = extractYouTubeId(searchText.value);
+		IS_PLAYLIST_MODAL_TYPE.set(extractedData.type);
+		try {
+			isLoading = true;
+			await searchYouTubeAPI(searchText.value);
+			searchText.value = '';
+		} catch (err: any) {
+			SEARCHED_VIDEO_DETAILS.set(null);
+		} finally {
+			isLoading = false;
+		}
+	}
+	function handleKeyDown(event: KeyboardEvent) {
+		if (event.key === 'Enter') {
+			searchYouTube();
+		}
+	}
+
+	async function pasteFromClipboard() {
+		try {
+			const clipboardText = await navigator.clipboard.readText();
+			if (clipboardText.includes('http')) {
+				if (confirm('The clipboard contains a URL. Do you want to paste it?')) {
+					const input = document.querySelector('#youTubeVideo') as HTMLInputElement;
+					input.value = clipboardText;
+				}
+			}
+		} catch (error) {
+			console.error('Failed to read clipboard: ', error);
+		}
+	}
+
+	const play = async () => {
+		IS_VIDEO_MODAL_OPEN.set(true);
+		IS_PLAY_VIDEOS.set(true);
+	};
 </script>
 
-<div class="flex items-center justify-center gap-4 mx-4 my-2">
+<div class="flex flex-col items-center justify-center gap-4 mx-4 my-2 md:flex-row">
 	<input
-		class="w-full max-w-4xl p-2 border border-gray-300 focus:outline-none focus:border-black focus:border-opacity-75"
-		placeholder="Search videos..."
+		class="p-2 border border-gray-300 w-80 focus:outline-none focus:border-black focus:border-opacity-75"
+		placeholder="Search or paste a YouTube video URL"
 		type="search"
-		on:input={(e) => onSearch(e.currentTarget.value || '')}
+		id="youTubeVideo"
+		on:keydown={handleKeyDown}
+		on:click={pasteFromClipboard}
+		on:input={(e) => {
+			let searchText = (e.currentTarget as HTMLInputElement).value.trim();
+			if (searchText.includes('http')) {
+				onSearch('');
+			} else {
+				onSearch(searchText);
+			}
+		}}
 	/>
-	<div class="flex items-center gap-4">
+	<div class="flex">
+		<div class="flex items-center justify-center w-24">
+			{#if isLoading}
+				<div class="loader"></div>
+			{:else}
+				<Button onclick={searchYouTube} label="Search" />
+			{/if}
+		</div>
 		<div class="relative inline-block text-left">
 			<button
 				id="dropdownButton"
@@ -47,7 +125,7 @@
 				on:mouseenter={handleMouseEnter}
 				on:mouseleave={handleMouseLeave}
 			>
-				<AescDescArrow isDesc={$IS_DESC}  color={hovered ? 'white' : 'black'}/>
+				<AescDescArrow isDesc={$IS_DESC} color={hovered ? 'white' : 'black'} />
 				<p>{SortOptionDetails[$SORT_BY].str}</p>
 				<svg
 					class="w-5 h-5 ml-2 -mr-1"
@@ -90,4 +168,22 @@
 			</div>
 		</div>
 	</div>
+
+	<button class="mx-10" title="Play" on:click={play} aria-label="Play">
+		<svg
+			xmlns="http://www.w3.org/2000/svg"
+			fill="none"
+			viewBox="0 0 24 24"
+			stroke-width="1"
+			stroke="black"
+			class="size-24"
+		>
+			<path
+				stroke-linecap="round"
+				stroke-linejoin="round"
+				d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.347a1.125 1.125 0 0 1 0 1.972l-11.54 6.347a1.125 1.125 0 0 1-1.667-.986V5.653Z"
+			/>
+		</svg>
+	</button>
 </div>
+<YouTubePlaylistModal />
