@@ -40,6 +40,7 @@
 	},
 	"type": "module",
 	"dependencies": {
-		"@vercel/analytics": "^1.4.0"
+		"@vercel/analytics": "^1.4.0",
+		"estree-walker": "^2.0.2"
 	}
 }
