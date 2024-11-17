@@ -72,20 +72,6 @@
 		}
 	}
 
-	async function pasteFromClipboard() {
-		try {
-			const clipboardText = await navigator.clipboard.readText();
-			if (clipboardText.includes('http')) {
-				if (confirm('The clipboard contains a URL. Do you want to paste it?')) {
-					const input = document.querySelector('#youTubeVideo') as HTMLInputElement;
-					input.value = clipboardText;
-				}
-			}
-		} catch (error) {
-			console.error('Failed to read clipboard: ', error);
-		}
-	}
-
 	const play = async () => {
 		IS_VIDEO_MODAL_OPEN.set(true);
 		IS_PLAY_VIDEOS.set(true);
@@ -99,7 +85,6 @@
 		type="search"
 		id="youTubeVideo"
 		on:keydown={handleKeyDown}
-		on:click={pasteFromClipboard}
 		on:input={(e) => {
 			let searchText = (e.currentTarget as HTMLInputElement).value.trim();
 			if (searchText.includes('http')) {
