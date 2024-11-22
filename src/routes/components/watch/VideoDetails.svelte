@@ -1,9 +1,13 @@
 <script lang="ts">
 	import {
 		addVideoToIndexDB,
+		CURRENT_VIDEO_ID,
+		IS_PLAY_VIDEOS,
 		IS_PLAYLIST_MODAL_OPEN,
+		IS_VIDEO_MODAL_OPEN,
 		isAlreadyThere,
 		PLAYLIST_VIDEO_LIST,
+		setVideoAsWatched,
 		VIDEO_STORE
 	} from '$lib/stores/VideoDB';
 	import { onMount } from 'svelte';
@@ -14,6 +18,7 @@
 	let isLoading = false;
 	let isAlreadyAdded = false;
 
+	// Add video to IndexedDB and handle state updates
 	async function addToIndexDB() {
 		if (!videoDetails) {
 			return;
@@ -24,7 +29,7 @@
 			if (video) {
 				VIDEO_STORE.update((x) => [video, ...x]);
 			}
-			removeVideoFromPlaylist();
+			removeVideoFromPlaylist(); // Remove video from the playlist
 		} catch (e) {
 			console.error('Error adding video to indexDB', e);
 			return;
@@ -33,17 +38,23 @@
 		}
 	}
 
+	// Remove video from the playlist and update `videoDetails` safely
 	function removeVideoFromPlaylist() {
 		if (!videoDetails) return;
-		$PLAYLIST_VIDEO_LIST = $PLAYLIST_VIDEO_LIST.filter((x) => x.id !== videoDetails?.id);
-		videoDetails = null;
-		if ($PLAYLIST_VIDEO_LIST.length === 0) {
+
+		const updatedPlaylist = $PLAYLIST_VIDEO_LIST.filter((x) => x.id !== videoDetails?.id);
+		$PLAYLIST_VIDEO_LIST = updatedPlaylist;
+
+		// If there are more videos, set the next videoDetails only if it isn't already added
+		const nextVideo = updatedPlaylist.find(async (x) => !(await isAlreadyThere(x.id)));
+		videoDetails = nextVideo || null;
+
+		if (updatedPlaylist.length === 0) {
 			IS_PLAYLIST_MODAL_OPEN.set(false);
 		}
 	}
 
-	$: checkIfAlreadyAdded();
-
+	// Check if the video is already added
 	async function checkIfAlreadyAdded() {
 		if (videoDetails && videoDetails.id) {
 			isAlreadyAdded = await isAlreadyThere(videoDetails.id);
@@ -52,13 +63,36 @@
 		}
 	}
 
+	// Ensure state is correct when the component mounts
 	onMount(async () => {
 		if (videoDetails && videoDetails.id) {
 			isAlreadyAdded = await isAlreadyThere(videoDetails.id);
+		} else {
+			isAlreadyAdded = false;
 		}
 	});
+
+	// Open the modal to watch the video
+	async function openModal() {
+		try {
+			if (videoDetails !== null) {
+				await setVideoAsWatched(videoDetails?.id, true);
+			}
+		} catch (e) {
+			console.error('Error setting video as watched', e);
+		}
+		if (videoDetails !== null) {
+			IS_PLAY_VIDEOS.set(false);
+			CURRENT_VIDEO_ID.set(videoDetails?.id);
+			IS_VIDEO_MODAL_OPEN.set(true);
+		}
+	}
+
+	// Reactively check if the video is already added whenever `videoDetails` changes
+	$: checkIfAlreadyAdded();
 </script>
 
+<!-- UI -->
 {#if videoDetails}
 	<div class="flex flex-col items-center justify-center gap-4 my-6 md:flex-row">
 		<img
@@ -68,9 +102,12 @@
 			class="object-cover rounded-md"
 			style="aspect-ratio: 1280 / 720; object-fit: cover;"
 		/>
-		<h2 class="text-lg font-bold capitalize line-clamp-2 max-w-96 min-w-96">
-			{videoDetails.title}
-		</h2>
+		<div class="flex flex-col">
+			<h2 class="text-lg font-bold capitalize line-clamp-2 max-w-96 min-w-96">
+				{videoDetails.title}<br>
+			</h2>
+			<span class="text-md">{videoDetails.channelTitle}</span>
+		</div>
 		<div class="flex">
 			<div class="flex items-center justify-center md:w-24">
 				{#if !isAlreadyAdded}
@@ -83,7 +120,7 @@
 			</div>
 			<Button
 				label="Watch"
-				onclick={() => window.open(`https://www.youtube.com/watch?v=${videoDetails?.id}`, '_blank')}
+				onclick={openModal}
 				className="md:mr-4 mx-4"
 			/>
 			<Button label="Remove" onclick={removeVideoFromPlaylist} />

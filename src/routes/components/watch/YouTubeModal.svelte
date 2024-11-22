@@ -32,7 +32,7 @@
 				{:else}
 					<iframe
 						class="absolute top-0 left-0 w-full h-full aspect-video"
-						src="https://www.youtube.com/embed/{$CURRENT_VIDEO_ID.id}?autoplay=1&modestbranding=1&rel=0&playsinline=1"
+						src="https://www.youtube.com/embed/{$CURRENT_VIDEO_ID}?autoplay=1&modestbranding=1&rel=0&playsinline=1"
 						title="YouTube video player"
 						frameborder="0"
 						allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"

@@ -38,7 +38,7 @@
 			console.error('Error setting video as watched', e);
 		}
 		IS_PLAY_VIDEOS.set(false);
-		CURRENT_VIDEO_ID.set(video);
+		CURRENT_VIDEO_ID.set(video.id);
 		IS_VIDEO_MODAL_OPEN.set(true);
 	}
 

@@ -79,7 +79,7 @@
 						<h2 class="text-xl font-bold">Search Result</h2>
 					</div>
 				{/if}
-				{#each $PLAYLIST_VIDEO_LIST as video}
+				{#each $PLAYLIST_VIDEO_LIST as video (video.id)}
 					<VideoDetails videoDetails={video} />
 				{/each}
 			</div>
