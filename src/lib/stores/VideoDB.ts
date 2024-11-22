@@ -78,7 +78,6 @@ export async function fetchPaginatedData(
 		OPEN_REQUEST.onerror = (event: Event) => reject((event.target as IDBRequest).error);
 	});
 }
-
 export async function searchVideos(
 	cursorValue: IDBValidKey | null,
 	sortBy: string = 'titleIndex',
@@ -93,35 +92,38 @@ export async function searchVideos(
 	const RESULTS: App.VideoIndexDB[] = [];
 	let counter = 0;
 	let nextCursorValue: IDBValidKey | null = null;
+
+	const SEARCH_TEXT = searchText.toLowerCase().split(/\s+/);
+
 	return new Promise((resolve, reject) => {
 		const OPEN_REQUEST =
 			cursorValue != null
 				? INDEX.openCursor(
-					DIRECTION == 'prev'
+					DIRECTION === 'prev'
 						? IDBKeyRange.upperBound(cursorValue, true)
 						: IDBKeyRange.lowerBound(cursorValue, true),
 					DIRECTION
 				)
 				: INDEX.openCursor(null, DIRECTION);
-
-		const SEARCH_TEXT = searchText.toLowerCase();
 		OPEN_REQUEST.onsuccess = (event: Event) => {
 			const CURSOR = (event.target as IDBRequest<IDBCursorWithValue>).result;
 			if (CURSOR && counter < ITEMS_PER_PAGE) {
 				const video = CURSOR.value as App.VideoIndexDB;
-				if (
-					video.title.toLowerCase().includes(SEARCH_TEXT) ||
-					video.channelTitle.toLowerCase().includes(SEARCH_TEXT)
-				) {
+				const isMatch = SEARCH_TEXT.some(keyword =>
+					video.title.toLowerCase().includes(keyword) ||
+					video.channelTitle.toLowerCase().includes(keyword)
+				);
+				if (isMatch) {
 					RESULTS.push(video);
 					counter++;
+					nextCursorValue = CURSOR.key;
 				}
-				nextCursorValue = CURSOR.key;
 				CURSOR.continue();
 			} else {
 				resolve({ results: RESULTS, nextCursorValue });
 			}
 		};
+
 		OPEN_REQUEST.onerror = (event: Event) => reject((event.target as IDBRequest).error);
 	});
 }
