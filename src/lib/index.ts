@@ -112,7 +112,8 @@ export enum CurrentPage {
 export enum YouTubeIdType {
 	Video = "VIDEO",
 	Playlist = "PLAYLIST",
-	Search = "SEARCH"
+	Search = "SEARCH",
+	none = "NONE"
 }
 
 export function setSpaPage(x: CurrentPage) {
@@ -165,32 +166,41 @@ export function extractYouTubeId(urlOrId: string): App.YouTubeIdResult {
 export async function searchYouTubeAPI(searchText: string): Promise<YouTubeIdType> {
 	SEARCHED_VIDEO_DETAILS.set(null);
 	PLAYLIST_VIDEO_LIST.set([]);
-	const extractedData = extractYouTubeId(searchText);
-	if (extractedData.type === YouTubeIdType.Video) {
-		const response = await fetch(`/api/youtube?video=${encodeURIComponent(extractedData.id)}`);
-		const data = await response.json();
-		if (!response.ok) {
-			throw new Error(data.error);
+	try {
+		const extractedData = extractYouTubeId(searchText);
+		if (extractedData.type === YouTubeIdType.Video) {
+			const response = await fetch(`/api/youtube?video=${encodeURIComponent(extractedData.id)}`);
+			const data = await response.json();
+			if (!response.ok) {
+				throw new Error(data.error);
+			}
+			SEARCHED_VIDEO_DETAILS.set(data as App.YouTubeVideo);
+		} else if (extractedData.type === YouTubeIdType.Playlist) {
+			const response = await fetch(
+				`/api/youtube?playlist=${encodeURIComponent(extractedData.id)}`
+			);
+			const data = await response.json();
+			if (!response.ok) {
+				throw new Error(data.error);
+			}
+			const uniqueData = Array.from(
+				new Map(data.map((item: App.YouTubeVideo) => [item.id, item])).values()
+			);
+
+			PLAYLIST_VIDEO_LIST.set(uniqueData as App.YouTubeVideo[]);
+			IS_PLAYLIST_MODAL_OPEN.set(true);
+		} else if (extractedData.type === YouTubeIdType.Search) {
+			const response = await fetch(`/api/youtube?search=${encodeURIComponent(extractedData.id)}`);
+			const data = await response.json();
+			if (!response.ok) {
+				throw new Error(data.error);
+			}
+			PLAYLIST_VIDEO_LIST.set(data as App.YouTubeVideo[]);
+			IS_PLAYLIST_MODAL_OPEN.set(true);
 		}
-		SEARCHED_VIDEO_DETAILS.set(data as App.YouTubeVideo);
-	} else if (extractedData.type === YouTubeIdType.Playlist) {
-		const response = await fetch(
-			`/api/youtube?playlist=${encodeURIComponent(extractedData.id)}`
-		);
-		const data = await response.json();
-		if (!response.ok) {
-			throw new Error(data.error);
-		}
-		PLAYLIST_VIDEO_LIST.set(data as App.YouTubeVideo[]);
-		IS_PLAYLIST_MODAL_OPEN.set(true);
-	} else if (extractedData.type === YouTubeIdType.Search) {
-		const response = await fetch(`/api/youtube?search=${encodeURIComponent(extractedData.id)}`);
-		const data = await response.json();
-		if (!response.ok) {
-			throw new Error(data.error);
-		}
-		PLAYLIST_VIDEO_LIST.set(data as App.YouTubeVideo[]);
-		IS_PLAYLIST_MODAL_OPEN.set(true);
+		return extractedData.type;
+	} catch (error) {
+		console.error(error);
+		return YouTubeIdType.none;
 	}
-	return extractedData.type;
 }

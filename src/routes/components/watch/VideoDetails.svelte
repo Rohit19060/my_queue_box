@@ -18,7 +18,6 @@
 	let isLoading = false;
 	let isAlreadyAdded = false;
 
-	// Add video to IndexedDB and handle state updates
 	async function addToIndexDB() {
 		if (!videoDetails) {
 			return;
@@ -29,7 +28,7 @@
 			if (video) {
 				VIDEO_STORE.update((x) => [video, ...x]);
 			}
-			removeVideoFromPlaylist(); // Remove video from the playlist
+			removeVideoFromPlaylist();
 		} catch (e) {
 			console.error('Error adding video to indexDB', e);
 			return;
@@ -38,32 +37,17 @@
 		}
 	}
 
-	// Remove video from the playlist and update `videoDetails` safely
 	function removeVideoFromPlaylist() {
 		if (!videoDetails) return;
-
 		const updatedPlaylist = $PLAYLIST_VIDEO_LIST.filter((x) => x.id !== videoDetails?.id);
 		$PLAYLIST_VIDEO_LIST = updatedPlaylist;
-
-		// If there are more videos, set the next videoDetails only if it isn't already added
 		const nextVideo = updatedPlaylist.find(async (x) => !(await isAlreadyThere(x.id)));
 		videoDetails = nextVideo || null;
-
 		if (updatedPlaylist.length === 0) {
 			IS_PLAYLIST_MODAL_OPEN.set(false);
 		}
 	}
 
-	// Check if the video is already added
-	async function checkIfAlreadyAdded() {
-		if (videoDetails && videoDetails.id) {
-			isAlreadyAdded = await isAlreadyThere(videoDetails.id);
-		} else {
-			isAlreadyAdded = false;
-		}
-	}
-
-	// Ensure state is correct when the component mounts
 	onMount(async () => {
 		if (videoDetails && videoDetails.id) {
 			isAlreadyAdded = await isAlreadyThere(videoDetails.id);
@@ -72,7 +56,6 @@
 		}
 	});
 
-	// Open the modal to watch the video
 	async function openModal() {
 		try {
 			if (videoDetails !== null) {
@@ -87,12 +70,8 @@
 			IS_VIDEO_MODAL_OPEN.set(true);
 		}
 	}
-
-	// Reactively check if the video is already added whenever `videoDetails` changes
-	$: checkIfAlreadyAdded();
 </script>
 
-<!-- UI -->
 {#if videoDetails}
 	<div class="flex flex-col items-center justify-center gap-4 my-6 md:flex-row">
 		<img
@@ -104,7 +83,7 @@
 		/>
 		<div class="flex flex-col">
 			<h2 class="text-lg font-bold capitalize line-clamp-2 max-w-96 min-w-96">
-				{videoDetails.title}<br>
+				{videoDetails.title}<br />
 			</h2>
 			<span class="text-md">{videoDetails.channelTitle}</span>
 		</div>
@@ -118,11 +97,7 @@
 					{/if}
 				{/if}
 			</div>
-			<Button
-				label="Watch"
-				onclick={openModal}
-				className="md:mr-4 mx-4"
-			/>
+			<Button label="Watch" onclick={openModal} className="md:mr-4 mx-4" />
 			<Button label="Remove" onclick={removeVideoFromPlaylist} />
 		</div>
 	</div>

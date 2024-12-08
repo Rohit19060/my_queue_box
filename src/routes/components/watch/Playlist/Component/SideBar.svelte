@@ -89,6 +89,7 @@
 			await removePlaylistFromIndexDB(id);
 			$PLAYLIST_STORE = $PLAYLIST_STORE.filter((playlist) => playlist.id !== id);
 		} catch (e) {
+			alert('Error removing playlist to indexDB');
 			console.error('Error removing playlist to indexDB', e);
 			return;
 		} finally {
@@ -111,13 +112,16 @@
 				type: 'show'
 			};
 			const x = await searchYouTubeAPI(playlist.id);
+			if (x === YouTubeIdType.none) {
+				throw new Error('Error fetching playlist details');
+			}
 			if (x === YouTubeIdType.Playlist) {
 				IS_PLAYLIST_MODAL_TYPE.set('PLAYLIST');
 			}
-
 			SIDEBAR_OPEN.set(false);
 		} catch (e) {
-			console.error('Error fetching playlist details', e);
+			alert('Playlist details not found');
+			console.error(e);
 		} finally {
 			isLoading = {
 				id: '-1',
@@ -140,7 +144,17 @@
 	<div class="fixed top-0 left-0 z-50 flex flex-col p-4 bg-white shadow-lg w-80 h-dvh">
 		<div class="flex items-center justify-between">
 			<h2 class="mb-4 text-xl font-bold">Playlists</h2>
-			<button class="ml-5" on:click={() => SIDEBAR_OPEN.set(!$SIDEBAR_OPEN)}> X </button>
+			<button
+				class="ml-5 rounded-full top-4 right-6 hover:bg-black hover:text-white"
+				on:click={() => SIDEBAR_OPEN.set(!$SIDEBAR_OPEN)}
+				aria-label="SideBar"
+			>
+				<svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+					<path
+						d="M6.293 6.293a1 1 0 011.414 0L12 9.586l4.293-4.293a1 1 0 111.414 1.414L13.414 11l4.293 4.293a1 1 0 01-1.414 1.414L12 12.414l-4.293 4.293a1 1 0 01-1.414-1.414L10.586 13 6.293 8.707a1 1 0 010-1.414z"
+					/>
+				</svg>
+			</button>
 		</div>
 		<form on:submit|preventDefault={addPlaylist} class="mb-4">
 			<div class="flex items-center justify-center space-x-2">
@@ -227,7 +241,6 @@
 {/if}
 
 <style>
-	/* Define the keyframe for rotation */
 	@keyframes rotate {
 		0% {
 			transform: rotate(0deg);
@@ -237,7 +250,6 @@
 		}
 	}
 
-	/* Apply the animation class */
 	.rotate {
 		animation: rotate 1s linear infinite;
 	}

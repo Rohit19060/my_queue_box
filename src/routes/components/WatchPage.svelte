@@ -144,6 +144,9 @@
 	}
 </script>
 
+<svelte:head>
+	<title>Watch | Queue Box</title>
+</svelte:head>
 <VideosSearch onSort={(x) => reset(x)} onSearch={(y) => searchVideo(y)} />
 <VideoDetails videoDetails={$SEARCHED_VIDEO_DETAILS} />
 {#if dataLoaded}

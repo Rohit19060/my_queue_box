@@ -22,19 +22,18 @@
 		}
 		try {
 			isLoading = true;
-			let videos: App.VideoIndexDB[] = [];
-			for (let i = 0; i < $PLAYLIST_VIDEO_LIST.length; i++) {
+			const playListCopy = [...$PLAYLIST_VIDEO_LIST];
+			for (let i = 0; i < playListCopy.length; i++) {
 				try {
-					let x = await addVideoToIndexDB($PLAYLIST_VIDEO_LIST[i]);
+					let x = await addVideoToIndexDB(playListCopy[i]);
 					if (x) {
-						videos.push(x);
+						VIDEO_STORE.update((y) => [x, ...y]);
+						$PLAYLIST_VIDEO_LIST = $PLAYLIST_VIDEO_LIST.filter((y) => y.id !== playListCopy[i].id);
 					}
 				} catch (e) {
 					console.error('Error adding video to indexDB', e);
 				}
 			}
-			PLAYLIST_VIDEO_LIST.set([]);
-			VIDEO_STORE.update((x) => [...videos, ...x]);
 			closeModal();
 		} catch (e) {
 			console.error('Error adding video to indexDB', e);

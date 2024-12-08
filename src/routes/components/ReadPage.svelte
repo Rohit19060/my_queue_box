@@ -30,6 +30,9 @@
 	}
 </script>
 
+<svelte:head>
+	<title>Read | Queue Box</title>
+</svelte:head>
 {#if $READ_STORE.length > 0}
 	<div class="m-4 text-center">
 		{#if !$IS_ADD_MODAL}

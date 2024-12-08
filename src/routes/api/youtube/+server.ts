@@ -5,12 +5,11 @@ const YOUTUBE_API_URL = 'https://www.googleapis.com/youtube/v3';
 
 const fetchYouTubeData = async <T>(endpoint: string): Promise<T> => {
     const response = await fetch(`${YOUTUBE_API_URL}/${endpoint}`);
-    if (!response.ok) throw new Error('Failed to fetch data');
+    if (!response.ok) throw new Error(response.statusText);
     return response.json() as Promise<T>;
 };
 
-// In-memory cache
-const cache: Map<string, any> = new Map();
+const cache: Map<string, unknown> = new Map();
 
 export const GET: RequestHandler = async ({ url }) => {
     if (!YOUTUBE_API_KEY) {

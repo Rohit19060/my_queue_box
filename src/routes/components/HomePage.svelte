@@ -30,6 +30,9 @@
 	}
 </script>
 
+<svelte:head>
+	<title>Home | Queue Box</title>
+</svelte:head>
 <main class="grid flex-1 grid-cols-1 gap-6 p-4 md:grid-cols-2 md:p-6">
 	<div class="col-span-1 p-4 rounded-lg shadow-sm bg-background md:p-6 md:col-span-2">
 		<div class="grid gap-10 sm:grid-cols-2">
